@@ -143,14 +143,14 @@ progress persistence
 
 <table>
 <tr>
-<td width="50%"><img src="assets/images/screenshots/learning.jpg" alt="Learning page"><br><sub><b>Learning</b> — topic path, lesson steps, and a tutor note that stays empty until a real analysis exists</sub></td>
-<td width="50%"><img src="assets/images/screenshots/quiz.jpg" alt="Quiz page"><br><sub><b>Quiz</b> — answer evaluation with the explanation for the specific question</sub></td>
+<td width="50%"><img src="https://ibb.co/MknJpBLf" alt="Learning page"><br><sub><b>Learning</b> — topic path, lesson steps, and a tutor note that stays empty until a real analysis exists</sub></td>
+<td width="50%"><img src="https://ibb.co/C5Y8690Z" alt="Quiz page"><br><sub><b>Quiz</b> — answer evaluation with the explanation for the specific question</sub></td>
 </tr>
 <tr>
-<td colspan="2"><img src="assets/images/screenshots/dashboard.jpg" alt="Dashboard"><br><sub><b>Dashboard</b> — per-topic understanding, weak topics, and an activity feed built entirely from recorded answers</sub></td>
+<td colspan="2"><img src="https://ibb.co/qYXt8GS7" alt="Dashboard"><br><sub><b>Dashboard</b> — per-topic understanding, weak topics, and an activity feed built entirely from recorded answers</sub></td>
 </tr>
 <tr>
-<td colspan="2"><img src="assets/images/screenshots/flip-cards.jpg" alt="Flip cards"><br><sub><b>Flip cards</b> — the four stages of the learning loop, one card turned</sub></td>
+<td colspan="2"><img src="https://ibb.co/r25ND2N9" alt="Flip cards"><br><sub><b>Flip cards</b> — the four stages of the learning loop, one card turned</sub></td>
 </tr>
 </table>
 
