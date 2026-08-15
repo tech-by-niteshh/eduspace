@@ -10,7 +10,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(prefix="/api", tags=["Authentication"])
 
 GOOGLE_SHEET_WEBHOOK_URL = os.getenv("SHEETS_SCRIPT_API")
 

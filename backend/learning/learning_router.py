@@ -1,11 +1,14 @@
 """
 AI learning-path API.
 
-    POST /learning/start  — decompose a student's topic into 5 parts (Groq)
-    POST /learning/part   — generate one part's lesson content
-                             (Gemini summary + Gemini explanation + Groq tutor
-                             note, run concurrently since none depend on
-                             each other)
+    POST /api/learning/start  — decompose a student's topic into 5 parts (Groq)
+    POST /api/learning/part   — generate one part's lesson content
+                                 (Gemini summary + Gemini explanation + Groq
+                                 tutor note, run concurrently since none
+                                 depend on each other)
+
+The "/api" prefix is baked directly into this router — see
+backend/server.py's docstring for why.
 
 Every response follows the same envelope: {"success": true, ...} or
 {"success": false, "error": {"code", "message"}}. Provider failures and
@@ -27,7 +30,7 @@ from backend.learning import learning_session
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/learning", tags=["Learning"])
+router = APIRouter(prefix="/api/learning", tags=["Learning"])
 
 MAX_TOPIC_LENGTH = 80
 MIN_TOPIC_LENGTH = 2

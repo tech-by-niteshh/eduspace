@@ -11,19 +11,13 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(prefix="/api", tags=["Authentication"])
 
 # Sheet Webhook URL (Yahan apna URL dalein)
 GOOGLE_SHEET_WEBHOOK_URL = os.getenv("SHEETS_SCRIPT_API")
 
 def _call_sheet(payload: dict) -> dict:
-    """POST to the Google Sheet webhook and return its JSON object.
-
-    Raises HTTPException with a message that is safe to show in the browser.
-    The raw exception text is deliberately NOT forwarded: requests embeds the
-    full request URL in its errors, which would publish the private
-    SHEETS_SCRIPT_API webhook to anyone who triggers a network failure.
-    """
+    
     if not GOOGLE_SHEET_WEBHOOK_URL:
         # Log server-side for the developer; say nothing specific to the client.
         logger.error("SHEETS_SCRIPT_API is not set — check the .env file.")

@@ -23,24 +23,26 @@
      Declared once here — login.js and signup.js used to hardcode their own
      copy of this string.
 
-     Every call site in the codebase (login.js, signup.js, ai-learning.js,
-     ai-quiz.js, this file's EduSpace.insights, ...) calls EduSpace.api with
-     an unprefixed path like "/quiz/start" — backend/server.py's routes are
-     defined the same way, with no "/api" prefix. This one line is the only
-     place that needs to know which environment is running:
+     The backend's own routers already own the real "/api/..." path (see
+     backend/quiz/quiz_router.py etc.) — every call site in the codebase
+     (login.js, signup.js, ai-learning.js, ai-quiz.js, this file's
+     EduSpace.insights, ...) calls EduSpace.api with a bare path like
+     "/quiz/start", and this one line decides what goes in front of it:
 
        - Local dev: the FastAPI server listens on 127.0.0.1:8000 directly,
-         so "/quiz/start" must resolve to "http://127.0.0.1:8000/quiz/start".
-       - Vercel: the frontend and API share one origin, and api/index.py is
-         reached under "/api" (see vercel.json) — so the base becomes "/api"
-         and the same "/quiz/start" call resolves to "/api/quiz/start".
+         with routes registered under /api (same as production), so
+         "/quiz/start" must resolve to "http://127.0.0.1:8000/api/quiz/start".
+       - Vercel: the frontend and API share one origin, and api/index.py
+         forwards everything under "/api" straight into the same FastAPI
+         routes with no rewrite — so the base is just "/api" and the same
+         call resolves to "/api/quiz/start".
 
      This never produces "/api/api/..." because no call site ever includes
-     "/api" itself — only this prefix does. */
+     "/api" itself — only this prefix does, exactly once. */
   EduSpace.API_BASE_URL = (() => {
     const host = window.location.hostname;
     const isLocal = host === "localhost" || host === "127.0.0.1" || host === "";
-    return isLocal ? "http://127.0.0.1:8000" : "/api";
+    return isLocal ? "http://127.0.0.1:8000/api" : "/api";
   })();
 
   /* ------------------------------------------------------------------
@@ -104,7 +106,7 @@
 
     /** Is the FastAPI server reachable? Used to decide what to show, never to block. */
     async isOnline() {
-      const res = await this.request("/", { timeoutMs: 3000 });
+      const res = await this.request("", { timeoutMs: 3000 }); // API_BASE_URL already ends in "/api"
       return res.ok;
     },
   };

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from backend.ai import misconception, question_generator, tutor
 from backend.learning import knowledge_model, pipeline
 
-router = APIRouter(prefix="/insights", tags=["Insights"])
+router = APIRouter(prefix="/api/insights", tags=["Insights"])
 
 
 class AnswerEvent(BaseModel):

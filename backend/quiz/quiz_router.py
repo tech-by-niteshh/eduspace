@@ -1,9 +1,15 @@
 """
 AI quiz API.
 
-    POST /quiz/start    — generate a 5-question quiz for a topic (Gemini)
-    POST /quiz/question — score one answer and explain it (Gemini)
-    POST /quiz/result   — analyze the finished quiz (Groq)
+    POST /api/quiz/start    — generate a 5-question quiz for a topic (Gemini)
+    POST /api/quiz/question — score one answer and explain it (Gemini)
+    POST /api/quiz/result   — analyze the finished quiz (Groq)
+
+The "/api" prefix is baked directly into this router (not added by a
+rewrite or an ASGI wrapper) — see backend/server.py's docstring for why:
+Vercel's Python runtime forwards the full "/api/*" path straight to the
+FastAPI app in api/index.py, and FastAPI does its own routing from there,
+so the app's own route paths must already be the real, final paths.
 
 Same envelope convention as learning_router.py: {"success": true, ...} or
 {"success": false, "error": {"code", "message"}}. AI failures and validation
@@ -22,7 +28,7 @@ from backend.quiz import quiz_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/quiz", tags=["Quiz"])
+router = APIRouter(prefix="/api/quiz", tags=["Quiz"])
 
 MAX_TOPIC_LENGTH = 80
 MIN_TOPIC_LENGTH = 2

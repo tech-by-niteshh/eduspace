@@ -32,7 +32,7 @@ GROQ_API_KEY = os.getenv("GROQ_API1") or os.getenv("GROQ_API2")
 GEMINI_API_KEY = os.getenv("GEMINI_API1")
 
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -117,11 +117,11 @@ def gemini_generate(
         "generationConfig": {
             "temperature": temperature,
             "maxOutputTokens": max_tokens,
-            # gemini-2.5-flash spends maxOutputTokens on an internal "thinking"
-            # pass by default, which can leave little or no budget for the
-            # actual reply on short, simple prompts like these. These are
-            # plain generation tasks with no multi-step reasoning to do, so
-            # thinking is switched off rather than padding max_tokens to
+            # Gemini's "thinking" models spend maxOutputTokens on an internal
+            # reasoning pass by default, which can leave little or no budget
+            # for the actual reply on short, simple prompts like these. These
+            # are plain generation tasks with no multi-step reasoning to do,
+            # so thinking is switched off rather than padding max_tokens to
             # compensate for a budget we don't need.
             "thinkingConfig": {"thinkingBudget": 0},
         },

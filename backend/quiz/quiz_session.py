@@ -31,10 +31,13 @@ memory-isolated serverless invocations.
 import base64
 import hashlib
 import json
+import logging
 import os
 from typing import Optional
 
 from cryptography.fernet import Fernet, InvalidToken
+
+logger = logging.getLogger(__name__)
 
 SESSION_TTL_SECONDS = 60 * 60
 
@@ -57,6 +60,18 @@ def _load_key() -> bytes:
     secret = os.getenv("QUIZ_SESSION_SECRET")
     if not secret:
         secret = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+        # Vercel sets VERCEL=1 in every deployment's runtime environment —
+        # if this fallback fires there, every quiz will intermittently
+        # break with QUIZ_NOT_FOUND the moment two requests land on
+        # different serverless instances, which is confusing to debug
+        # without a loud, specific log line pointing at the actual cause.
+        log = logger.error if os.getenv("VERCEL") else logger.warning
+        log(
+            "QUIZ_SESSION_SECRET is not set — using a random per-process key. "
+            "This is fine for a single local dev server, but MUST be set to a "
+            "stable value in production (e.g. Vercel) or quiz sessions will "
+            "randomly fail with QUIZ_NOT_FOUND across serverless instances."
+        )
     digest = hashlib.sha256(secret.encode("utf-8")).digest()
     return base64.urlsafe_b64encode(digest)
 
