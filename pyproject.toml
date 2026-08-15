@@ -1,0 +1,11 @@
+[project]
+name = "eduspace"
+version = "1.0.0"
+description = "EduSpace AI-powered personalized learning platform"
+requires-python = ">=3.11"
+
+# Dependencies are declared in requirements.txt (Vercel's Python builder
+# installs from it directly) and are intentionally not duplicated here.
+
+[tool.vercel]
+entrypoint = "backend.server:app"
