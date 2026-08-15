@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduSpace — Personalized learning that understands the student</title>
+<meta name="description" content="EduSpace is an AI-powered learning platform that understands what a student knows, where they struggle, and why — then adapts what comes next.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon-180.png">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/index.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo" aria-label="EduSpace home"><img class="mark" src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span class="nav-wordmark">EduSpace</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="learning.html">Learning</a></li>
+      <li><a href="quiz.html">Quiz</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#support">Support</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost">Log in</a>
+      <a href="signup.html" class="btn btn-primary">Get started</a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">AI-powered personalized learning</span>
+        <h1>Learning that understands <em>why</em> a student got it wrong — not just that they did.</h1>
+        <p class="hero-sub">EduSpace tracks what each student actually understands, finds the specific misconception behind a wrong answer, and adjusts the next question, explanation, and pace to match — one student at a time.</p>
+        <div class="hero-actions">
+          <a href="signup.html" class="btn btn-primary">Start learning free</a>
+          <a href="#how" class="btn btn-ghost">See how it works</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong>2</strong><span>students, same wrong answer, different causes</span></div>
+          <div><strong>1</strong><span>learning path built around each one</span></div>
+        </div>
+      </div>
+      <div class="hero-visual reveal">
+        <div class="hero-card">
+          <div class="hero-card-row">
+            <span class="pill">Topic: Fractions</span>
+            <span class="hero-card-meta">Question 4 of 10</span>
+          </div>
+          <p class="hero-card-q">3/4 + 1/2 = ?</p>
+          <div class="hero-card-answer wrong">Student answer: 4/6</div>
+          <div class="hero-card-diagnosis">
+            <span class="diag-dot"></span>
+            Diagnosis: adding numerators and denominators directly — denominators not yet common
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="how">
+    <div class="container">
+      <span class="eyebrow">How EduSpace works</span>
+      <h2>Understand → Diagnose → Adapt → Explain</h2>
+      <p class="section-lead">Four steps happen quietly behind every question a student answers. Click a card to see what EduSpace is doing at each stage.</p>
+
+      <div class="flip-grid">
+        <div class="flip-card reveal">
+          <div class="flip-card-inner">
+            <div class="flip-card-face flip-card-front">
+              <span class="pill">01</span>
+              <h3>Understand</h3>
+              <p>Builds a live map of what a student already knows, topic by topic.</p>
+            </div>
+            <div class="flip-card-face flip-card-back">
+              <p>Every answer — right or wrong — updates a per-topic confidence score, not just a pass/fail mark.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-card-inner">
+            <div class="flip-card-face flip-card-front">
+              <span class="pill">02</span>
+              <h3>Diagnose</h3>
+              <p>Looks past the wrong answer to find the specific misconception behind it.</p>
+            </div>
+            <div class="flip-card-face flip-card-back">
+              <p>Two students can pick the same wrong option for different reasons. EduSpace tells those reasons apart.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-card-inner">
+            <div class="flip-card-face flip-card-front">
+              <span class="pill">03</span>
+              <h3>Adapt</h3>
+              <p>Adjusts difficulty and topic order so the next question meets the student where they are.</p>
+            </div>
+            <div class="flip-card-face flip-card-back">
+              <p>No fixed curriculum order — the path reshapes itself around weak topics as they're found.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-card-inner">
+            <div class="flip-card-face flip-card-front">
+              <span class="pill">04</span>
+              <h3>Explain</h3>
+              <p>Gives an explanation aimed at the actual misconception, not a generic hint.</p>
+            </div>
+            <div class="flip-card-face flip-card-back">
+              <p>The AI tutor addresses the specific gap it diagnosed, so the explanation actually closes it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIGNATURE: same wrong answer, different reasons -->
+  <section class="misconception">
+    <div class="container">
+      <span class="eyebrow">The hard part of personalization</span>
+      <h2>Same wrong answer. Different reasons.</h2>
+      <p class="section-lead">Two students answer the same question incorrectly. A simple system would give them the same correction. EduSpace doesn't.</p>
+
+      <div class="compare-grid reveal">
+        <div class="compare-card">
+          <div class="compare-head">
+            <span class="avatar">A</span>
+            <div>
+              <strong>Student A</strong>
+              <span>Topic: Fractions — Adding unlike denominators</span>
+            </div>
+          </div>
+          <p class="compare-q">3/4 + 1/2 = <span class="wrong-answer">4/6</span></p>
+          <div class="compare-diagnosis">
+            <span class="diag-label">What's actually happening</span>
+            <p>Adds numerators and denominators straight across — hasn't yet learned to find a common denominator.</p>
+          </div>
+          <div class="compare-next">
+            <span class="diag-label">What EduSpace does next</span>
+            <p>Shows a visual common-denominator walkthrough before the next fraction question.</p>
+          </div>
+        </div>
+
+        <div class="compare-divider">
+          <span>vs</span>
+        </div>
+
+        <div class="compare-card">
+          <div class="compare-head">
+            <span class="avatar alt">B</span>
+            <div>
+              <strong>Student B</strong>
+              <span>Topic: Fractions — Adding unlike denominators</span>
+            </div>
+          </div>
+          <p class="compare-q">3/4 + 1/2 = <span class="wrong-answer">4/6</span></p>
+          <div class="compare-diagnosis">
+            <span class="diag-label">What's actually happening</span>
+            <p>Found a common denominator correctly, but made an arithmetic slip converting 1/2 to eighths.</p>
+          </div>
+          <div class="compare-next">
+            <span class="diag-label">What EduSpace does next</span>
+            <p>Skips the conceptual explainer — gives one quick practice conversion instead.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="container">
+      <span class="eyebrow">What's built in</span>
+      <h2>Everything adapts around the student</h2>
+
+      <div class="feature-list">
+        <div class="feature-row reveal">
+          <div class="feature-num">01</div>
+          <div>
+            <h3>Adaptive difficulty</h3>
+            <p>Question difficulty rises and falls with demonstrated understanding, topic by topic, not as one blended score.</p>
+          </div>
+        </div>
+        <div class="feature-row reveal">
+          <div class="feature-num">02</div>
+          <div>
+            <h3>AI tutoring on mistakes</h3>
+            <p>When a student gets something wrong, the tutor explains the specific misconception it detected — not a generic "try again."</p>
+          </div>
+        </div>
+        <div class="feature-row reveal">
+          <div class="feature-num">03</div>
+          <div>
+            <h3>Weak-topic tracking</h3>
+            <p>A running map of where a student is confident and where they're not, visible to the student and updated after every answer.</p>
+          </div>
+        </div>
+        <div class="feature-row reveal">
+          <div class="feature-num">04</div>
+          <div>
+            <h3>Personalized pacing</h3>
+            <p>No two students move through the same material at the same speed, or necessarily in the same order.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="about">
+    <div class="container">
+      <div class="about-grid">
+        <div>
+          <span class="eyebrow">Our company</span>
+          <h2>Built for the student behind the wrong answer</h2>
+          <p>EduSpace started from a simple observation: most learning tools grade the answer and stop there. We think the more useful question is why the answer was wrong — and what a student needs next because of it. That's the problem we're building EduSpace to solve.</p>
+        </div>
+        <div>
+          <span class="eyebrow">Our members</span>
+          <div class="members-grid">
+            <div class="member-card">
+              <div class="member-avatar">FL</div>
+              <strong>Founder / Lead</strong>
+              <span>Product &amp; strategy</span>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">ML</div>
+              <strong>AI &amp; ML</strong>
+              <span>Diagnosis engine</span>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">FE</div>
+              <strong>Frontend</strong>
+              <span>Product experience</span>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">BE</div>
+              <strong>Backend</strong>
+              <span>Platform &amp; data</span>
+            </div>
+            <div class="member-card">
+              <div class="member-avatar">ER</div>
+              <strong>Education / Research</strong>
+              <span>Curriculum &amp; pedagogy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOLLOW -->
+  <section class="follow">
+    <div class="container follow-inner">
+      <h3>Follow EduSpace</h3>
+      <div class="social-row">
+        <a href="https://instagram.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer" aria-label="EduSpace on Instagram">IG</a>
+        <a href="https://x.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer" aria-label="EduSpace on X">X</a>
+        <a href="https://www.linkedin.com/in/nitesh-chaurasiya-a7b2aa3a5/" target="_blank" rel="noopener noreferrer" aria-label="EduSpace on LinkedIn">in</a>
+        <a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer" aria-label="EduSpace on Telegram">TG</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPORT -->
+  <section id="support" class="support">
+    <div class="container">
+      <span class="eyebrow">Need help?</span>
+      <h2>Support</h2>
+      <div class="support-grid reveal reveal-fade">
+        <div class="support-card">
+          <span class="diag-label">Phone</span>
+          <a href="tel:+14052559594">+1 (405) 2559594</a>
+        </div>
+        <div class="support-card">
+          <span class="diag-label">Email</span>
+          <a href="mailto:niteshh0x0@gmail.com">niteshh0x0@gmail.com</a>
+        </div>
+        <div class="support-card">
+          <span class="diag-label">Telegram</span>
+          <a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Message us on Telegram</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand"><img src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span>EduSpace</span></div>
+        <p>AI-powered personalized learning that understands the student, not just the answer.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="learning.html">Learning</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#about">Our members</a></li>
+          <li><a href="index.html#support">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Follow</h4>
+        <ul>
+          <li><a href="https://instagram.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <li><a href="https://x.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">X / Twitter</a></li>
+          <li><a href="https://www.linkedin.com/in/nitesh-chaurasiya-a7b2aa3a5/" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="tel:+14052559594">+1 (405) 2559594</a></li>
+          <li><a href="mailto:niteshh0x0@gmail.com">niteshh0x0@gmail.com</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 EduSpace. All rights reserved.</span>
+      <span>Made for the AI-Powered Personalized Learning Ecosystem hackathon.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/index.js"></script>
+</body>
+</html>

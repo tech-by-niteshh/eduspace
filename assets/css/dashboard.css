@@ -1,0 +1,1052 @@
+/* ==========================================================================
+   eduspace-dashboard-enhanced.css
+   Standalone enhancement layer — load AFTER base.css and dashboard.css.
+   Pure CSS. No HTML or JS dependencies. Targets existing class names only.
+
+   00. Tokens
+   01. Page environment (background field)
+   02. Selection / scrollbar / focus
+   03. Navigation
+   04. Buttons
+   05. Dashboard head + status badge
+   06. Stat cards
+   07. Panels + card hover system
+   08. Topic understanding bars
+   09. Weak topics
+   10. Activity stream
+   11. Reusable glass utilities
+   12. Entrance + reveal
+   13. Footer
+   14. Responsive
+   15. Reduced motion
+   16. Keyframes
+   ========================================================================== */
+
+/* ==========================================================================
+   00. TOKENS
+   ========================================================================== */
+
+:root {
+  /* Dashboard-layer aliases.
+     base.css owns the palette; this layer only maps it onto the --edu-*
+     names that the ~900 rules below were written against. No colour is
+     defined here, so the site can never drift out of one palette again. */
+  --edu-cobalt:     var(--ink);
+  --edu-space:      var(--ink-deep);
+  --edu-cyan:       var(--accent);
+  --edu-azure:      var(--ink-soft);
+  --edu-white:      var(--white);
+  --edu-soft-white: var(--cream);
+  --edu-silver:     var(--sand-deep);
+  --edu-navy:       var(--charcoal);
+  --edu-slate:      var(--muted);
+  --edu-border:     var(--line);
+
+  /* Channel values so every rgba() below stays palette-derived. */
+  --rgb-cobalt: 26, 100, 190;
+  --rgb-space:  4, 40, 126;
+  --rgb-cyan:   61, 191, 248;
+  --rgb-azure:  37, 150, 229;
+  --rgb-navy:   14, 33, 56;
+  --rgb-silver: 195, 204, 218;
+
+  /* Near-flat. Depth comes from shadow, not from hue shifts. */
+  --edu-grad-metric: linear-gradient(115deg, var(--charcoal) 0%, var(--ink-soft) 100%);
+  --edu-grad-action: var(--grad-action);
+  --edu-grad-fill:   linear-gradient(90deg, var(--ink) 0%, var(--ink-soft) 100%);
+  --edu-grad-edge:   linear-gradient(135deg, rgba(var(--rgb-cyan), .30), transparent 70%);
+
+  /* Restrained translucency — nav only. */
+  --edu-glass:        var(--glass-bg);
+  --edu-glass-solid:  var(--glass-solid);
+  --edu-glass-border: var(--glass-border);
+  --edu-blur:         var(--glass-blur);
+
+  /* Warm, low-contrast depth. */
+  --edu-sh-xs:  0 1px 2px rgba(var(--rgb-navy), .05);
+  --edu-sh-sm:  0 3px 12px -6px rgba(var(--rgb-navy), .12);
+  --edu-sh-md:  0 10px 28px -18px rgba(var(--rgb-navy), .22), 0 1px 4px rgba(var(--rgb-navy), .05);
+  --edu-sh-lg:  0 24px 52px -30px rgba(var(--rgb-navy), .26), 0 4px 14px rgba(var(--rgb-navy), .05);
+  --edu-glow-cyan:   0 0 0 1px rgba(var(--rgb-cyan), .38);
+  --edu-glow-cobalt: 0 0 0 1px rgba(var(--rgb-cobalt), .16);
+
+  /* Radii */
+  --edu-r-sm: var(--r-sm);
+  --edu-r-md: var(--r-md);
+  --edu-r-lg: var(--r-lg);
+  --edu-r-xl: var(--r-xl);
+  --edu-r-pill: var(--r-pill);
+
+  /* Motion — low velocity by design. */
+  --edu-ease: var(--ease);
+  --edu-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+  --edu-t-fast: var(--t-fast);
+  --edu-t-mid:  340ms;
+  --edu-t-slow: 680ms;
+
+  /* Type */
+  --edu-font-display: var(--font-display);
+  --edu-font-ui: var(--font-ui);
+}
+
+/* ==========================================================================
+   01. PAGE ENVIRONMENT
+   Two fixed layers behind all content: an atmospheric light field and a
+   geometric grid. Both are pointer-transparent and sit at z-index 0, so
+   normal stacking of dashboard content is untouched.
+   ========================================================================== */
+
+body {
+  position: relative;
+  background-color: var(--edu-soft-white);
+}
+
+
+
+
+
+/* Lift real content above both layers */
+.site-header,
+.dash-main,
+.site-footer { position: relative; z-index: 1; }
+
+/* Orbital arcs anchored to the dashboard column — the one large-scale
+   "space" gesture on the page, kept faint enough to read as lighting. */
+.dash-main {
+  position: relative;
+  overflow-x: clip;
+  padding-block: clamp(2.5rem, 1.5rem + 3vw, 4rem) clamp(4rem, 2rem + 5vw, 6.5rem);
+}
+
+
+
+
+
+.dash-main > .container { position: relative; z-index: 1; }
+
+/* ==========================================================================
+   02. SELECTION / SCROLLBAR / FOCUS
+   ========================================================================== */
+
+::selection { background: var(--edu-cyan); color: var(--edu-white); }
+::-moz-selection { background: var(--edu-cyan); color: var(--edu-white); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--edu-cobalt) var(--edu-soft-white); }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--edu-soft-white); }
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--edu-soft-white);
+  border-radius: var(--edu-r-pill);
+  background: linear-gradient(180deg, var(--edu-cobalt), var(--edu-azure));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--edu-azure), var(--edu-cyan));
+}
+
+:focus-visible {
+  outline: 2px solid var(--edu-cyan);
+  outline-offset: 3px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 5px rgba(var(--rgb-cobalt), .16);
+}
+
+/* ==========================================================================
+   03. NAVIGATION
+   ========================================================================== */
+
+.site-header .nav {
+  border: 1px solid var(--edu-glass-border);
+  border-radius: var(--edu-r-lg);
+  background: var(--edu-glass);
+  -webkit-backdrop-filter: var(--edu-blur);
+  backdrop-filter: var(--edu-blur);
+  box-shadow:
+    0 10px 34px -18px rgba(var(--rgb-cobalt), .32),
+    inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition:
+    background-color var(--edu-t-mid) var(--edu-ease),
+    box-shadow var(--edu-t-mid) var(--edu-ease),
+    border-color var(--edu-t-mid) var(--edu-ease);
+}
+
+.site-header.is-scrolled .nav {
+  background: var(--edu-glass-solid);
+  border-color: var(--edu-border);
+  box-shadow:
+    0 16px 44px -20px rgba(var(--rgb-cobalt), .40),
+    inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+
+.site-header .nav-logo {
+  font-family: var(--edu-font-display);
+  font-weight: 600;
+  letter-spacing: -.03em;
+  color: var(--edu-navy);
+}
+
+/* Nav mark styling lives in base.css — it is the logo image, not a tile. */
+
+
+
+
+
+
+
+.site-header .nav-links a {
+  font-family: var(--edu-font-ui);
+  font-weight: 600;
+  color: var(--edu-slate);
+  border-radius: var(--edu-r-pill);
+  transition: color var(--edu-t-fast) var(--edu-ease), background-color var(--edu-t-fast) var(--edu-ease);
+}
+
+.site-header .nav-links a:hover {
+  color: var(--edu-cobalt);
+  background: rgba(var(--rgb-cobalt), .06);
+}
+
+.site-header .nav-links a::after {
+  background: var(--edu-grad-fill);
+  box-shadow: 0 0 8px rgba(var(--rgb-cyan), .6);
+}
+
+/* Dashboard is the current page — mark it without needing new markup */
+.dash-main ~ * .nav-links a[href="dashboard.html"],
+.site-header .nav-links a[href="dashboard.html"] { color: var(--edu-cobalt); }
+.site-header .nav-links a[href="dashboard.html"]::after { width: 18px; }
+
+.site-header .nav-toggle span { background: var(--edu-navy); }
+
+/* ==========================================================================
+   04. BUTTONS
+   ========================================================================== */
+
+.btn {
+  position: relative;
+  overflow: hidden;
+  font-family: var(--edu-font-ui);
+  font-weight: 700;
+  border-radius: var(--edu-r-pill);
+  transition:
+    transform var(--edu-t-mid) var(--edu-ease),
+    box-shadow var(--edu-t-mid) var(--edu-ease),
+    color var(--edu-t-fast) var(--edu-ease),
+    border-color var(--edu-t-fast) var(--edu-ease),
+    background-position var(--edu-t-slow) var(--edu-ease);
+}
+
+.btn-primary {
+  color: var(--edu-white);
+  background: var(--edu-grad-metric);
+  background-size: 220% 220%;
+  background-position: 0% 50%;
+  border: 0;
+  box-shadow: var(--edu-sh-md), inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 36%, rgba(255, 255, 255, .45) 50%, transparent 64%);
+  transform: translateX(-125%);
+  transition: transform var(--edu-t-slow) var(--edu-ease);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  background-position: 100% 50%;
+  box-shadow: var(--edu-sh-lg), 0 0 26px -8px rgba(var(--rgb-cyan), .55);
+}
+
+.btn-primary:hover::after { transform: translateX(125%); }
+.btn-primary:active { transform: translateY(0); box-shadow: var(--edu-sh-sm); }
+
+.btn-ghost {
+  color: var(--edu-navy);
+  background: var(--edu-glass);
+  border: 1px solid var(--edu-border);
+  -webkit-backdrop-filter: var(--edu-blur);
+  backdrop-filter: var(--edu-blur);
+}
+
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  color: var(--edu-cobalt);
+  border-color: var(--edu-azure);
+  box-shadow: 0 8px 22px -12px rgba(var(--rgb-cobalt), .5);
+}
+
+.btn:focus-visible { outline: 2px solid var(--edu-cyan); outline-offset: 3px; }
+
+/* ==========================================================================
+   05. DASHBOARD HEAD + STATUS BADGE
+   ========================================================================== */
+
+.dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  border-bottom: 1px solid var(--edu-border);
+}
+
+.dash-head h1 {
+  margin-top: .85rem;
+  font-family: var(--edu-font-display);
+  font-size: clamp(2.05rem, 1.3rem + 3.1vw, 3.4rem);
+  font-weight: 500;
+  line-height: 1.03;
+  letter-spacing: -.038em;
+  color: var(--edu-navy);
+}
+
+/* Gradient emphasis on the last word only — restraint over a full
+   gradient headline, which reads cheap at this size. */
+.dash-head h1 em,
+.dash-head h1 span {
+  background: var(--edu-grad-metric);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Eyebrow → live status badge */
+.dash-head .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .38rem .9rem .38rem .72rem;
+  border: 1px solid rgba(var(--rgb-cobalt), .28);
+  border-radius: var(--edu-r-pill);
+  background: rgba(255, 255, 255, .78);
+  -webkit-backdrop-filter: var(--edu-blur);
+  backdrop-filter: var(--edu-blur);
+  box-shadow: 0 4px 14px -8px rgba(var(--rgb-cobalt), .45);
+  font-family: var(--edu-font-ui);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--edu-cobalt);
+}
+
+/* Replace the inherited hairline with a pulsing cyan status node */
+.dash-head .eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--edu-cyan);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   06. STAT CARDS
+   ========================================================================== */
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(.85rem, 1.4vw, 1.25rem);
+  margin-top: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+.dash-stats .stat-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  padding: clamp(1.15rem, 2vw, 1.6rem);
+  border: 1px solid var(--edu-glass-border);
+  border-radius: var(--edu-r-xl);
+  background: var(--edu-glass-solid);
+  -webkit-backdrop-filter: var(--edu-blur);
+  backdrop-filter: var(--edu-blur);
+  box-shadow: var(--edu-sh-sm), inset 0 1px 0 rgba(255, 255, 255, .85);
+  transition:
+    transform var(--edu-t-mid) var(--edu-ease),
+    box-shadow var(--edu-t-mid) var(--edu-ease),
+    border-color var(--edu-t-mid) var(--edu-ease);
+}
+
+/* Corner illumination — holographic bloom in the top-right */
+.dash-stats .stat-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 70%;
+  aspect-ratio: 1;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--rgb-cyan), .20), transparent 68%);
+  opacity: .75;
+  transition: opacity var(--edu-t-mid) var(--edu-ease), transform var(--edu-t-slow) var(--edu-ease);
+}
+
+/* Light sweep on hover */
+.dash-stats .stat-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 38%, rgba(var(--rgb-azure), .16) 50%, transparent 62%);
+  transform: translateX(-120%);
+  transition: transform var(--edu-t-slow) var(--edu-ease);
+}
+
+.dash-stats .stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(var(--rgb-cyan), .40);
+  box-shadow: var(--edu-sh-lg), 0 0 30px -14px rgba(var(--rgb-cyan), .55);
+}
+
+.dash-stats .stat-card:hover::before { opacity: 1; transform: scale(1.15); }
+.dash-stats .stat-card:hover::after  { transform: translateX(120%); }
+
+.dash-stats .stat-card .diag-label {
+  font-family: var(--edu-font-ui);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--edu-slate);
+}
+
+/* The metric is the loudest element on the page — earned, because the
+   whole dashboard exists to deliver these four numbers. */
+.dash-stats .stat-card strong {
+  font-family: var(--edu-font-display);
+  font-size: clamp(2.4rem, 1.6rem + 2.6vw, 3.4rem);
+  font-weight: 600;
+  line-height: .95;
+  letter-spacing: -.045em;
+  font-variant-numeric: tabular-nums;
+  color: var(--edu-navy);
+}
+
+.dash-stats .stat-card .stat-note {
+  font-size: .8rem;
+  color: var(--edu-slate);
+}
+
+/* ==========================================================================
+   07. PANELS + CARD HOVER SYSTEM
+   ========================================================================== */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  margin-top: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+.dash-panel.card,
+.activity-panel.card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(1.35rem, 2.2vw, 2rem);
+  border: 1px solid var(--edu-glass-border);
+  border-radius: var(--edu-r-xl);
+  background: var(--edu-glass-solid);
+  -webkit-backdrop-filter: var(--edu-blur);
+  backdrop-filter: var(--edu-blur);
+  box-shadow: var(--edu-sh-sm), inset 0 1px 0 rgba(255, 255, 255, .85);
+  transition:
+    transform var(--edu-t-mid) var(--edu-ease),
+    box-shadow var(--edu-t-mid) var(--edu-ease),
+    border-color var(--edu-t-mid) var(--edu-ease);
+}
+
+
+
+/* Soft interior glow, bottom-left */
+.dash-panel.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--rgb-cobalt), .30);
+  box-shadow: var(--edu-sh-lg);
+}
+
+
+.activity-panel { margin-top: clamp(1rem, 1.8vw, 1.5rem); }
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--edu-border);
+}
+
+.panel-head h2 {
+  font-family: var(--edu-font-display);
+  font-size: clamp(1.1rem, .95rem + .55vw, 1.4rem);
+  font-weight: 600;
+  letter-spacing: -.022em;
+  color: var(--edu-navy);
+}
+
+.panel-head .stat-note {
+  font-family: var(--edu-font-ui);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--edu-slate);
+}
+
+/* ==========================================================================
+   08. TOPIC UNDERSTANDING BARS
+   Selectors are structural, so they hold whatever markup dashboard.js
+   renders inside .topic-bars.
+   ========================================================================== */
+
+.topic-bars { display: grid; gap: 1.15rem; }
+
+.topic-bars > * {
+  display: grid;
+  gap: .5rem;
+  transition: transform var(--edu-t-fast) var(--edu-ease);
+}
+
+.topic-bars > *:hover { transform: translateX(3px); }
+
+.topic-bars > * > span,
+.topic-bars > * > div > span,
+.topic-bars strong {
+  font-family: var(--edu-font-ui);
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--edu-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Track: any bar wrapper that is not the fill itself */
+.topic-bars > * > div:not([style*="width"]) {
+  position: relative;
+  overflow: hidden;
+  height: 10px;
+  border-radius: var(--edu-r-pill);
+  background: var(--edu-border);
+  box-shadow: inset 0 1px 2px rgba(var(--rgb-navy), .10);
+}
+
+/* Fill: the element JS sizes with an inline width */
+.topic-bars [style*="width"] {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  min-height: 10px;
+  border-radius: var(--edu-r-pill);
+  background: var(--edu-grad-fill);
+  transform-origin: left center;
+  animation: edu-fill-in 1.1s var(--edu-ease) both;
+}
+
+
+
+/* ==========================================================================
+   09. WEAK TOPICS
+   Cobalt/cyan only. Weakness is a signal to act on, not an alarm — so no
+   warning colour, and the palette has none to give.
+   ========================================================================== */
+
+.weak-list { display: grid; gap: .7rem; list-style: none; margin: 0; padding: 0; }
+
+.weak-list li {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .75rem;
+  padding: .95rem 1.1rem .95rem 1.3rem;
+  border: 1px solid var(--edu-border);
+  border-left: 3px solid var(--edu-cobalt);
+  border-radius: var(--edu-r-md);
+  background: rgba(255, 255, 255, .82);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--edu-sh-xs);
+  font-size: .92rem;
+  color: var(--edu-navy);
+  transition:
+    transform var(--edu-t-mid) var(--edu-ease),
+    box-shadow var(--edu-t-mid) var(--edu-ease),
+    border-color var(--edu-t-mid) var(--edu-ease),
+    background-color var(--edu-t-mid) var(--edu-ease);
+}
+
+/* Cyan status node */
+.weak-list li::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--edu-cyan);
+  box-shadow: 0 0 10px rgba(var(--rgb-cyan), .7);
+}
+
+/* Edge illumination on hover */
+.weak-list li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--edu-grad-edge);
+  opacity: 0;
+  transition: opacity var(--edu-t-mid) var(--edu-ease);
+}
+
+.weak-list li:hover {
+  transform: translateX(3px);
+  border-color: rgba(var(--rgb-cyan), .38);
+  border-left-color: var(--edu-cyan);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: var(--edu-sh-md);
+}
+
+.weak-list li:hover::after { opacity: .35; }
+
+.weak-list li strong { font-family: var(--edu-font-ui); font-weight: 700; }
+.weak-list li span,
+.weak-list li small { font-size: .78rem; color: var(--edu-slate); }
+
+/* ==========================================================================
+   10. ACTIVITY STREAM
+   ========================================================================== */
+
+.activity-list {
+  position: relative;
+  display: grid;
+  gap: .35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.6rem;
+}
+
+/* Spine */
+.activity-list::before {
+  content: "";
+  position: absolute;
+  top: .8rem;
+  bottom: .8rem;
+  left: 5px;
+  width: 1px;
+  background: linear-gradient(to bottom,
+    transparent,
+    rgba(var(--rgb-cobalt), .35) 12%,
+    rgba(var(--rgb-azure), .30) 88%,
+    transparent);
+}
+
+.activity-list li {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .4rem .9rem;
+  padding: .8rem .9rem;
+  border-radius: var(--edu-r-md);
+  font-size: .92rem;
+  color: var(--edu-navy);
+  transition: background-color var(--edu-t-fast) var(--edu-ease), transform var(--edu-t-fast) var(--edu-ease);
+}
+
+/* Node */
+.activity-list li::before {
+  content: "";
+  position: absolute;
+  left: -1.6rem;
+  top: 1.15rem;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--edu-white);
+  border: 2px solid var(--edu-cobalt);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-cobalt), .10);
+  transition: border-color var(--edu-t-fast) var(--edu-ease), box-shadow var(--edu-t-fast) var(--edu-ease);
+}
+
+/* Only the newest entry pulses — a stream with every node blinking is noise */
+.activity-list li:first-child::before {
+  border-color: var(--edu-cyan);
+}
+
+.activity-list li:hover {
+  background: rgba(var(--rgb-cobalt), .05);
+  transform: translateX(3px);
+}
+
+.activity-list li:hover::before {
+  border-color: var(--edu-cyan);
+  box-shadow: 0 0 0 4px rgba(var(--rgb-cyan), .16);
+}
+
+/* Timestamp hierarchy — pushed right, quieted down */
+.activity-list li span:last-child,
+.activity-list li time,
+.activity-list li small {
+  margin-left: auto;
+  font-family: var(--edu-font-ui);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--edu-slate);
+  white-space: nowrap;
+}
+
+.activity-list li strong { font-weight: 600; }
+
+/* ==========================================================================
+   11. REUSABLE GLASS UTILITIES
+   Opt-in classes for markup added later.
+   ========================================================================== */
+
+.glass-enhanced {
+  border: 1px solid var(--edu-glass-border);
+  border-radius: var(--edu-r-lg);
+  background: var(--edu-glass);
+  -webkit-backdrop-filter: var(--edu-blur);
+  backdrop-filter: var(--edu-blur);
+  box-shadow: var(--edu-sh-sm), inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+
+.glass-glow {
+  box-shadow: var(--edu-sh-md), var(--edu-glow-cyan);
+  border-color: rgba(var(--rgb-cyan), .34);
+}
+
+.holographic-surface {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.holographic-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(135deg, rgba(var(--rgb-cyan), .12), transparent 42%),
+    linear-gradient(300deg, rgba(var(--rgb-cobalt), .10), transparent 46%);
+}
+
+
+
+/* ==========================================================================
+   12. ENTRANCE + REVEAL
+   ========================================================================== */
+
+
+
+
+
+/* Staggered entrance for the stat row and panels, independent of JS delays */
+.dash-stats.is-visible .stat-card {
+  animation: edu-rise .72s var(--edu-ease) both;
+}
+.dash-stats.is-visible .stat-card:nth-child(1) { animation-delay: 60ms; }
+.dash-stats.is-visible .stat-card:nth-child(2) { animation-delay: 140ms; }
+.dash-stats.is-visible .stat-card:nth-child(3) { animation-delay: 220ms; }
+.dash-stats.is-visible .stat-card:nth-child(4) { animation-delay: 300ms; }
+
+.dash-panel.is-visible .weak-list li,
+.dash-panel.is-visible .topic-bars > *,
+.activity-panel.is-visible .activity-list li {
+  animation: edu-rise-sm .6s var(--edu-ease) both;
+}
+
+.dash-panel.is-visible .weak-list li:nth-child(n+2),
+.dash-panel.is-visible .topic-bars > *:nth-child(n+2),
+.activity-panel.is-visible .activity-list li:nth-child(n+2) { animation-delay: 80ms; }
+.dash-panel.is-visible .weak-list li:nth-child(n+3),
+.dash-panel.is-visible .topic-bars > *:nth-child(n+3),
+.activity-panel.is-visible .activity-list li:nth-child(n+3) { animation-delay: 160ms; }
+.dash-panel.is-visible .weak-list li:nth-child(n+4),
+.dash-panel.is-visible .topic-bars > *:nth-child(n+4),
+.activity-panel.is-visible .activity-list li:nth-child(n+4) { animation-delay: 240ms; }
+.dash-panel.is-visible .weak-list li:nth-child(n+5),
+.dash-panel.is-visible .topic-bars > *:nth-child(n+5),
+.activity-panel.is-visible .activity-list li:nth-child(n+5) { animation-delay: 320ms; }
+
+/* Directional utilities for later use */
+.edu-fade-up    { animation: edu-rise .7s var(--edu-ease) both; }
+.edu-fade-down  { animation: edu-drop .7s var(--edu-ease) both; }
+.edu-fade-left  { animation: edu-in-left .7s var(--edu-ease) both; }
+.edu-fade-right { animation: edu-in-right .7s var(--edu-ease) both; }
+.edu-scale-in   { animation: edu-scale .7s var(--edu-ease) both; }
+
+/* ==========================================================================
+   13. FOOTER
+   ========================================================================== */
+
+.site-footer {
+  background: var(--edu-white);
+  border-top: 1px solid var(--edu-border);
+}
+
+.site-footer .footer-brand {
+  font-family: var(--edu-font-display);
+  font-weight: 600;
+  letter-spacing: -.03em;
+  color: var(--edu-navy);
+}
+
+.site-footer .footer-col h4 {
+  font-family: var(--edu-font-ui);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--edu-navy);
+}
+
+.site-footer .footer-col a {
+  position: relative;
+  color: var(--edu-slate);
+  transition: color var(--edu-t-fast) var(--edu-ease), padding-left var(--edu-t-fast) var(--edu-ease);
+}
+
+.site-footer .footer-col a::before {
+  content: "";
+  position: absolute;
+  left: -.55rem;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--edu-cyan);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--edu-t-fast) var(--edu-ease);
+}
+
+.site-footer .footer-col a:hover { color: var(--edu-cobalt); padding-left: .55rem; }
+.site-footer .footer-col a:hover::before { opacity: 1; }
+
+.site-footer .footer-bottom {
+  border-top: 1px solid var(--edu-border);
+  color: var(--edu-slate);
+}
+
+/* ==========================================================================
+   14. RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1080px) {
+  .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-grid  { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .dash-head { align-items: flex-start; }
+  .dash-head .btn { width: 100%; padding-block: .9rem; }
+
+  .dash-stats { gap: .75rem; }
+  .dash-stats .stat-card { padding: 1.1rem; border-radius: var(--edu-r-lg); }
+  .dash-stats .stat-card strong { font-size: 2.35rem; }
+
+  .dash-panel.card,
+  .activity-panel.card { padding: 1.2rem; border-radius: var(--edu-r-lg); }
+
+  .panel-head { margin-bottom: 1rem; }
+
+  /* Hover transforms are dead weight on touch — drop them */
+  .dash-stats .stat-card:hover,
+  .dash-panel.card:hover,
+  .weak-list li:hover,
+  .activity-list li:hover,
+  .topic-bars > *:hover { transform: none; }
+
+  .btn { min-height: 44px; }
+
+  body::after { background-size: 48px 48px; }
+  .dash-main::before,
+  .dash-main::after { display: none; }
+}
+
+@media (max-width: 480px) {
+  .dash-stats { grid-template-columns: 1fr; }
+  .dash-stats .stat-card strong { font-size: 2.6rem; }
+  .activity-list { padding-left: 1.4rem; }
+  .activity-list li span:last-child,
+  .activity-list li time,
+  .activity-list li small { margin-left: 0; }
+}
+
+/* ==========================================================================
+   15. REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal { opacity: 1; transform: none; }
+
+  .topic-bars [style*="width"] { animation: none; }
+
+  .dash-stats .stat-card:hover,
+  .dash-panel.card:hover,
+  .weak-list li:hover,
+  .activity-list li:hover,
+  .btn:hover { transform: none; }
+}
+
+
+
+
+
+
+
+
+
+
+
+@keyframes edu-fill-in {
+  from { transform: scaleX(0); opacity: .4; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes edu-rise {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes edu-rise-sm {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes edu-drop {
+  from { opacity: 0; transform: translate3d(0, -22px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes edu-in-left {
+  from { opacity: 0; transform: translate3d(-26px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes edu-in-right {
+  from { opacity: 0; transform: translate3d(26px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes edu-scale {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: none; }
+}
+/* ==========================================================================
+   13. EMPTY STATES, SIGNED-OUT NOTICE, TOPIC BAR MARKUP
+   Added so the dashboard reads as "no data yet" rather than "broken".
+   Palette and motion tokens are the existing --edu-* set; nothing new.
+   ========================================================================== */
+
+/* No-JS / failed-JS safety net — see the matching rule in base.css. */
+html:not(.js) .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Empty state ---- */
+.dash-empty {
+  display: grid;
+  gap: .4rem;
+  padding: 1.6rem 1.4rem;
+  border: 1px dashed var(--edu-border);
+  border-radius: var(--edu-r-md);
+  background: rgba(var(--rgb-silver), .07);
+  animation: edu-rise .6s var(--edu-ease) both;
+}
+
+.dash-empty-title {
+  margin: 0;
+  font-family: var(--edu-font-ui);
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--edu-navy);
+}
+
+.dash-empty-body {
+  margin: 0;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--edu-slate);
+  max-width: 46ch;
+}
+
+/* Placeholder metric — no data behind it, so it should not shout. */
+.dash-stats .stat-card strong.is-empty {
+  font-size: clamp(1.6rem, 1.2rem + 1vw, 2.1rem);
+  opacity: .38;
+}
+
+/* ---- Signed-out notice ---- */
+.dash-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+  padding: 1.1rem 1.4rem;
+  border: 1px solid var(--edu-border);
+  border-left: 3px solid var(--edu-cobalt);
+  border-radius: var(--edu-r-md);
+  background: var(--edu-glass-solid);
+  box-shadow: var(--edu-sh-sm);
+}
+
+.dash-notice p {
+  margin: 0;
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--edu-slate);
+  max-width: 60ch;
+}
+
+.dash-notice[hidden] { display: none; }
+
+/* ---- Topic bar rows rendered by dashboard.js ----
+   Name and percentage share one line; the track spans full width beneath.
+   The row keeps exactly one direct-child <div> so the existing
+   ".topic-bars > * > div:not([style*='width'])" track rule still matches. */
+.topic-bars .topic-bar {
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: .35rem .75rem;
+}
+
+.topic-bars .topic-bar > strong { justify-self: end; }
+.topic-bars .topic-bar > .topic-track { grid-column: 1 / -1; }
+
+/* ---- Activity row detail text ---- */
+.activity-list li .activity-detail {
+  font-size: .85rem;
+  color: var(--edu-slate);
+}
+
+/* Header greeting, set by common.js */
+.nav-user {
+  font-family: var(--edu-font-ui);
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--edu-navy);
+  white-space: nowrap;
+}

@@ -1,0 +1,23 @@
+/* ==========================================================================
+   EduSpace — signup.css
+   Signup-page specifics only. The shared auth layout lives in auth.css.
+   ========================================================================== */
+
+.signup-benefits {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: var(--space-5);
+}
+
+.signup-benefits li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+}
+
+/* The checkbox row sits closer to the button than a normal field would. */
+.terms-row {
+  margin-bottom: var(--space-5);
+}

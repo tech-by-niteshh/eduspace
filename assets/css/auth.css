@@ -1,0 +1,140 @@
+/* ==========================================================================
+   EduSpace — auth.css
+   Layout shared by login.html and signup.html. Loaded by both, after
+   base.css and before the page's own stylesheet, so neither page has to
+   repeat this block.
+   ========================================================================== */
+
+.auth-main {
+  padding-block: clamp(2rem, 1rem + 3vw, 4rem) clamp(3rem, 2rem + 4vw, 5.5rem);
+  background: var(--surface);
+}
+
+.auth-section {
+  padding-block: 0;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 1rem + 4vw, 4.5rem);
+}
+
+/* ---- Editorial side ---- */
+.auth-side h1 {
+  margin-top: var(--space-4);
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 2.9rem);
+}
+
+.auth-side > p {
+  max-width: 46ch;
+  margin-top: var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--fs-lead);
+}
+
+/* ---- Form card ---- */
+.auth-card {
+  padding: clamp(1.5rem, 1.1rem + 1.6vw, 2.4rem);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--white);
+  box-shadow: var(--sh-md);
+}
+
+.auth-card h2 {
+  margin-top: 0;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.9rem);
+}
+
+.auth-card-sub {
+  margin: 0.55rem 0 var(--space-5);
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+}
+
+.auth-card form {
+  margin-top: var(--space-5);
+}
+
+.auth-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.auth-link {
+  font-family: var(--font-ui);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--sand-deep);
+  transition: border-color var(--t-fast) var(--ease);
+}
+.auth-link:hover {
+  border-color: var(--ink);
+}
+
+.auth-switch {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+  text-align: center;
+}
+.auth-switch a {
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--sand-deep);
+}
+.auth-switch a:hover {
+  border-color: var(--ink);
+}
+
+/* ---- Shared thin progress bar ----
+   Also reused by the learning sidebar. */
+.auth-progress {
+  height: 6px;
+  margin-top: 0.6rem;
+  border-radius: var(--r-pill);
+  background: var(--sand);
+  overflow: hidden;
+}
+
+.auth-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+  transition: width var(--t-slow) var(--ease);
+}
+
+.auth-progress-label {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  /* Form first on small screens — the editorial panel is supporting copy. */
+  .auth-side {
+    order: 2;
+  }
+  .auth-card {
+    order: 1;
+  }
+}

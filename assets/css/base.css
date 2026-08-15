@@ -1,0 +1,945 @@
+/* ==========================================================================
+   EduSpace — base.css
+   Design tokens, reset, typography, buttons, navigation, footer, utilities.
+   Loaded first on every page; it is the single source of truth for tokens.
+   Page stylesheets (index / dashboard / learning / quiz / login / signup)
+   must NOT redeclare these — they only add page-specific layout.
+
+   NOTE: this token block was previously wrapped in an unterminated comment,
+   which left every var() below undefined on any page that did not ship its
+   own copy of the tokens. That is fixed; do not comment it out again.
+   ========================================================================== */
+
+:root {
+  /* ---- Palette — sampled from assets/images/logo.png ---------------------
+     The EduSpace mark is a white/silver globe with a deep-blue book and a
+     bright blue glow. Those are the only hues used below:
+       #04287E deep navy   #2372C6 cobalt   #2596E5 azure
+       #3DBFF8 bright sky  #E6EAF2 near-white  #B1B9C7 silver
+     Neutrals are cooled to match, so page and logo read as one brand. */
+  --white: #ffffff;
+  --mist: #f5f8fc; /* page background — the logo's near-white, lightened */
+  --cloud: #e9eef6; /* raised surface */
+  --silver: #c3ccda; /* strong divider */
+  --line: #dde4ef; /* default border */
+  --navy: #0e2138; /* headings and primary text */
+  --space: #04287e; /* deepest brand blue, straight from the mark */
+  --cobalt: #1a64be; /* primary action — AA as text on white, mist and cloud */
+  --azure: #2596e5; /* secondary action */
+  --sky: #3dbff8; /* brightest accent */
+  --slate: #55647c; /* secondary text — AA on white, mist and cloud */
+
+  /* ---- Semantic roles ---------------------------------------------------
+     ONE RULE: --sky means "the system noticed something about your learning."
+     Never decoration, never a hover state. Cobalt = action. Cloud = surface. */
+  --text: var(--navy);
+  --text-muted: var(--slate);
+  --surface: var(--mist);
+  --surface-alt: var(--cloud);
+  --border: var(--line);
+  --accent: var(--sky);
+  --accent-ink: var(--space); /* accent dark enough for body text */
+  --accent-soft: #e3f1fd;
+
+  /* Gradients stay inside the mark's own blue range and never animate. */
+  --grad-action: linear-gradient(120deg, var(--space) 0%, var(--cobalt) 58%, var(--azure) 100%);
+  --grad-text: linear-gradient(100deg, var(--space) 0%, var(--cobalt) 100%);
+  --grad-deep: linear-gradient(160deg, #061a3f 0%, var(--space) 58%, #0a326f 100%);
+
+  /* Restrained translucency — the nav only. */
+  --glass-bg: rgba(245, 248, 252, 0.88);
+  --glass-solid: rgba(255, 255, 255, 0.97);
+  --glass-border: rgba(195, 204, 218, 0.7);
+  --glass-blur: saturate(115%) blur(10px);
+
+  /* ---- Type ----
+     Only the families actually loaded in each page's <head>. */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --fs-hero: clamp(2.4rem, 1.35rem + 4.4vw, 4.35rem);
+  --fs-h2: clamp(1.85rem, 1.25rem + 2.3vw, 3rem);
+  --fs-h3: clamp(1.12rem, 0.98rem + 0.5vw, 1.4rem);
+  --fs-lead: clamp(1.02rem, 0.95rem + 0.35vw, 1.2rem);
+  --fs-body: clamp(0.97rem, 0.94rem + 0.14vw, 1.05rem);
+  --fs-small: 0.875rem;
+  --fs-micro: 0.72rem;
+
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --section-pad: clamp(4.5rem, 3rem + 6vw, 8.5rem);
+  --gutter: clamp(1.25rem, 0.7rem + 2.2vw, 2.5rem);
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* ---- Depth ----
+     Two-layer shadows: a tight contact shadow plus a wide soft one. Blue-
+     tinted so cards sit on the page rather than floating above it. */
+  --sh-sm: 0 1px 2px rgba(14, 33, 56, 0.06);
+  --sh-md: 0 8px 24px -14px rgba(14, 33, 56, 0.2), 0 1px 3px rgba(14, 33, 56, 0.06);
+  --sh-lg: 0 22px 48px -26px rgba(14, 33, 56, 0.26), 0 4px 12px rgba(14, 33, 56, 0.06);
+  --sh-nav: 0 6px 24px -16px rgba(14, 33, 56, 0.24);
+
+  /* ---- Motion ----
+     One system: flip, slide, rise, reveal. Everything is slow on purpose.
+     Distances stay in the 2-24px range so nothing lurches. */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 180ms;
+  --t-mid: 320ms;
+  --t-slow: 620ms;
+  --t-flip: 760ms; /* a card turning should read as a physical object */
+  --lift-btn: -2px;
+  --lift-card: -3px;
+  --lift-panel: -2px;
+  --slide-from: 22px; /* reveal travel on desktop */
+  --perspective: 1000px;
+  --z-nav: 100;
+
+  /* ---- Feedback ---- */
+  --danger: #c0392b;
+  --danger-soft: #fbeae8;
+  --success: #1e7a52;
+  --success-soft: #e6f3ec;
+
+  /* ---- Compatibility aliases -------------------------------------------
+     index.css and dashboard.css reference these older names in hundreds of
+     rules. Mapping them here retints those files without touching layout. */
+  --cream: var(--mist);
+  --sand: var(--cloud);
+  --sand-deep: var(--silver);
+  --charcoal: var(--navy);
+  --ink: var(--cobalt);
+  --ink-deep: var(--space);
+  --ink-soft: var(--azure);
+  --muted: var(--slate);
+  --space-blue: var(--space);
+  --cyan: var(--sky);
+  --soft-white: var(--cloud);
+  --titanium: var(--silver);
+  --blue-gray: var(--line);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 6.5rem;
+}
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  padding-top: 5.75rem;
+}
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--text);
+}
+p {
+  margin: 0;
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+strong {
+  font-weight: 600;
+}
+em {
+  font-style: normal;
+}
+
+h1 {
+  font-size: var(--fs-hero);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-top: var(--space-4);
+}
+h3 {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+h4 {
+  font-family: var(--font-ui);
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+h1 em,
+h2 em {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.container {
+  width: min(1200px, 100% - (var(--gutter) * 2));
+  margin-inline: auto;
+}
+/* Element selector (0,0,2) so any section class can override without !important */
+main > section {
+  padding-block: var(--section-pad);
+}
+.section-lead {
+  max-width: 62ch;
+  margin-top: var(--space-4);
+  font-size: var(--fs-lead);
+  color: var(--text-muted);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cobalt);
+}
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-alt);
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+.diag-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 0.4rem;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  --btn-y: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.78rem 1.4rem;
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+  transform: translate3d(0, var(--btn-y), 0);
+  transition:
+    transform var(--t-mid) var(--ease),
+    box-shadow var(--t-mid) var(--ease),
+    border-color var(--t-mid) var(--ease),
+    color var(--t-mid) var(--ease);
+}
+.btn-primary {
+  color: var(--white);
+  background: var(--grad-action);
+  background-size: 180% 180%;
+  background-position: 0% 50%;
+  box-shadow: var(--sh-md);
+  transition:
+    transform var(--t-mid) var(--ease),
+    box-shadow var(--t-mid) var(--ease),
+    background-position var(--t-slow) var(--ease);
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.42) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  transition: transform var(--t-slow) var(--ease);
+}
+.btn-primary:hover {
+  --btn-y: -2px;
+  background-position: 100% 50%;
+  box-shadow: var(--sh-lg);
+}
+.btn-primary:hover::after {
+  transform: translateX(120%);
+}
+.btn-ghost {
+  color: var(--navy);
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.btn-ghost:hover {
+  --btn-y: -2px;
+  color: var(--cobalt);
+  border-color: var(--azure);
+  box-shadow: var(--sh-sm);
+}
+.btn:active {
+  --btn-y: 0;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 3px;
+}
+
+/* ---- Navigation ---- */
+.site-header {
+  position: fixed;
+  inset: 0.85rem 0 auto;
+  z-index: var(--z-nav);
+  padding-inline: var(--gutter);
+  pointer-events: none;
+}
+.nav {
+  pointer-events: auto;
+  width: min(1200px, 100%);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: 0.6rem 0.7rem 0.6rem 1.15rem;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--sh-nav);
+  transition:
+    background-color var(--t-mid) var(--ease),
+    box-shadow var(--t-mid) var(--ease);
+}
+.site-header.is-scrolled .nav {
+  background: var(--glass-solid);
+  box-shadow: 0 14px 40px -18px rgba(26, 100, 190, 0.34);
+}
+.nav-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-display);
+  font-size: 1.06rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--navy);
+}
+/* The real logo asset, never a CSS re-creation.
+   object-fit: contain + a square box means the mark can never stretch,
+   whatever the source aspect ratio is. */
+.nav-logo .mark {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  /* Square box + contain: the mark keeps its aspect ratio in any slot. */
+  object-fit: contain;
+  transition: transform var(--t-mid) var(--ease);
+}
+.nav-logo:hover .mark {
+  transform: translateY(-1px);
+}
+.nav-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-inline: auto;
+}
+.nav-links a {
+  position: relative;
+  display: block;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--slate);
+  transition:
+    color var(--t-fast) var(--ease),
+    background-color var(--t-fast) var(--ease);
+}
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.28rem;
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--grad-text);
+  transform: translateX(-50%);
+  transition: width var(--t-mid) var(--ease);
+}
+.nav-links a:hover {
+  color: var(--navy);
+  background: rgba(248, 250, 252, 0.9);
+}
+.nav-links a:hover::after,
+.nav-links a[aria-current="page"]::after {
+  width: 18px;
+}
+.nav-links a[aria-current="page"] {
+  color: var(--cobalt);
+}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nav-actions .btn {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.88rem;
+}
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0.6rem;
+  border-radius: var(--r-sm);
+}
+.nav-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--navy);
+  transition:
+    transform var(--t-mid) var(--ease),
+    opacity var(--t-fast) var(--ease);
+}
+.site-header.nav-open .nav-toggle span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.site-header.nav-open .nav-toggle span:nth-child(2) {
+  opacity: 0;
+}
+.site-header.nav-open .nav-toggle span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ---- Footer ---- */
+.site-footer {
+  padding-block: var(--space-8) var(--space-5);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  gap: var(--space-6) var(--space-5);
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--navy);
+  margin-bottom: var(--space-3);
+}
+.footer-brand img {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+.footer-col p {
+  max-width: 34ch;
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+}
+.footer-col h4 {
+  margin-bottom: var(--space-4);
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: var(--fs-micro);
+}
+.footer-col li + li {
+  margin-top: 0.55rem;
+}
+.footer-col a {
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+  transition: color var(--t-fast) var(--ease);
+}
+.footer-col a:hover {
+  color: var(--cobalt);
+}
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-micro);
+  color: var(--text-muted);
+}
+
+/* ---- Utilities ---- */
+
+/* ---- Scrollbar ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--azure) var(--soft-white);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--soft-white);
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--soft-white);
+  border-radius: var(--r-pill);
+  background: var(--cobalt);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--azure);
+}
+::selection {
+  background: rgba(61, 191, 248, 0.25);
+  color: var(--navy);
+}
+
+/* ---- Accessibility ---- */
+:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 980px) {
+  body {
+    padding-top: 5rem;
+  }
+  .nav {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+  .nav-toggle {
+    display: flex;
+    margin-left: auto;
+  }
+  .nav-actions {
+    display: none;
+  }
+  .nav-links {
+    display: none;
+    order: 3;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin: 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+  .site-header.nav-open .nav-links {
+    display: flex;
+  }
+  .site-header.nav-open .nav-actions {
+    display: flex;
+    order: 4;
+    width: 100%;
+    padding-top: var(--space-3);
+  }
+  .site-header.nav-open .nav-actions .btn {
+    flex: 1;
+  }
+  .nav-links a {
+    padding: 0.7rem 0.6rem;
+    font-size: 0.95rem;
+  }
+  .nav-links a::after {
+    left: 0.6rem;
+    transform: none;
+  }
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .footer-col:first-child {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 560px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+  .footer-bottom {
+    flex-direction: column;
+  }
+}
+/* ---- No-JS / failed-JS safety net ----------------------------------------
+   .reveal starts at opacity:0 and is only made visible by common.js. If that
+   script is missing or throws, the page would render completely blank. The
+   inline <script> in each <head> adds .js to <html>, so when JS has not run
+   the reveal elements simply stay visible instead of disappearing. */
+html:not(.js) .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+/* Logged-in student name in the header, set by common.js */
+.nav-user {
+  font-family: var(--font-ui, inherit);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   SHARED COMPONENTS
+   Used by more than one page, so they live here rather than being repeated
+   in each page stylesheet.
+   ========================================================================== */
+
+/* ---- Card ---- */
+.card {
+  padding: clamp(1.25rem, 1rem + 1vw, 1.85rem);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--white);
+  box-shadow: var(--sh-sm);
+}
+
+/* ---- Diagnosis dot ----
+   Gold means "the system noticed something". Static by design. */
+.diag-dot {
+  flex: none;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ---- Forms ---- */
+.field {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: var(--space-4);
+}
+
+.field label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--white);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  transition:
+    border-color var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.field select {
+  appearance: none;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% + 1px),
+    calc(100% - 13px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.4rem;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(26, 100, 190, 0.09);
+}
+
+/* Error state — set by login.js / signup.js on the .field wrapper */
+.field-error {
+  display: none;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+.field.has-error input,
+.field.has-error select {
+  border-color: var(--danger);
+}
+.field.has-error .field-error {
+  display: block;
+}
+.field.has-error .field-hint {
+  display: none;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ---- Form status line ----
+   Colours live here, not as inline styles set from JavaScript. */
+.form-status {
+  min-height: 1.25rem;
+  margin-top: var(--space-3);
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+}
+.form-status.status-success {
+  color: var(--success);
+}
+.form-status.status-error {
+  color: var(--danger);
+}
+
+/* ==========================================================================
+   MOTION SYSTEM
+   Four movements, used deliberately and nowhere else:
+
+     flip    — feature / information cards turning over
+     slide   — sections and content blocks entering the viewport
+     rise    — cards, buttons and panels lifting on hover
+     reveal  — text and supporting content fading in
+
+   All of it is transform + opacity only, so nothing triggers layout.
+   Everything is slow: 320ms for interaction, 620ms for entrance.
+   Travel stays between 2px and 24px — enough to read as movement,
+   never enough to lurch.
+   ========================================================================== */
+
+/* ---- Reveal / slide -----------------------------------------------------
+   The existing .reveal / .is-visible observer in common.js drives all of
+   this. Modifiers only change the direction of travel — there is no second
+   animation system anywhere in the project. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, var(--slide-from), 0);
+  transition:
+    opacity var(--t-slow) var(--ease),
+    transform var(--t-slow) var(--ease);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* Horizontal entrance, for side-by-side content blocks. */
+.reveal-left {
+  transform: translate3d(calc(var(--slide-from) * -1), 0, 0);
+}
+.reveal-right {
+  transform: translate3d(var(--slide-from), 0, 0);
+}
+
+/* Text and supporting copy: fade only, no travel. */
+.reveal-fade {
+  transform: none;
+}
+
+/* ---- Rise ---------------------------------------------------------------
+   One shared hover behaviour for every raised surface: a small lift and a
+   slightly deeper shadow. Hover-capable pointers only, so a tap on a phone
+   never leaves a card stuck in its hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .card,
+  .support-card,
+  .stat-card {
+    transition:
+      transform var(--t-mid) var(--ease),
+      box-shadow var(--t-mid) var(--ease),
+      border-color var(--t-mid) var(--ease);
+  }
+  .card:hover,
+  .support-card:hover,
+  .stat-card:hover {
+    transform: translate3d(0, var(--lift-card), 0);
+    box-shadow: var(--sh-md);
+  }
+}
+
+/* ---- Buttons ------------------------------------------------------------
+   Rise on hover, press back down on click. The press is what makes it feel
+   like a physical control rather than a rectangle that changes colour. */
+.btn:active {
+  --btn-y: 1px;
+  box-shadow: var(--sh-sm);
+  transition-duration: var(--t-fast);
+}
+
+/* ---- Depth --------------------------------------------------------------
+   Perspective on the containers, not the cards, so sibling cards share one
+   vanishing point instead of each having its own. */
+.flip-grid,
+.dash-stats,
+.dash-grid {
+  perspective: var(--perspective);
+}
+
+/* ==========================================================================
+   MOTION: REDUCED / MOBILE
+   ========================================================================== */
+
+/* Shorter travel on small screens — the same gesture, scaled to the viewport. */
+@media (max-width: 640px) {
+  :root {
+    --slide-from: 14px;
+    --lift-card: -2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-fade {
+    opacity: 1;
+    transform: none;
+  }
+}

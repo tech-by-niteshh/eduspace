@@ -1,0 +1,554 @@
+/* ==========================================================================
+   EduSpace — learning.css
+   Lesson page: topic sidebar + lesson panel.
+   Motion here is limited to a low-velocity slide when the lesson changes.
+   ========================================================================== */
+
+.learning-main {
+  padding-block: clamp(2rem, 1rem + 3vw, 3.5rem) clamp(3rem, 2rem + 4vw, 5.5rem);
+  background: var(--surface);
+}
+
+.learning-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  align-items: start;
+  gap: clamp(1.5rem, 1rem + 2vw, 3rem);
+}
+
+/* ==========================================================================
+   Sidebar — the path
+   ========================================================================== */
+
+.learning-sidebar {
+  position: sticky;
+  top: 7rem;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--white);
+  box-shadow: var(--sh-sm);
+}
+
+.learning-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ai-new-topic-btn {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+
+.ai-new-topic-btn:hover {
+  background: var(--accent);
+  color: var(--charcoal);
+}
+
+.ai-new-topic-btn:active {
+  transform: scale(0.97);
+}
+
+.learning-sidebar h3 {
+  margin-top: 0.6rem;
+  margin-bottom: var(--space-4);
+}
+
+.topic-list {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.topic-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.62rem 0.7rem;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+.topic-item:hover {
+  background: var(--sand);
+  color: var(--text);
+}
+
+.topic-item:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.topic-status {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.62rem;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.topic-name {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Completed */
+.topic-item.done .topic-status {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+.topic-item.done .topic-name {
+  color: var(--text);
+}
+
+/* Currently open — gold, because it is the system telling you where you are */
+.topic-item.active {
+  background: var(--sand);
+  color: var(--text);
+}
+.topic-item.active .topic-status {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--charcoal);
+}
+.topic-item.active .topic-name {
+  font-weight: 600;
+}
+
+/* Marked for review */
+.topic-item.flagged .topic-name::after {
+  content: "· for review";
+  margin-left: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--accent-ink);
+}
+
+.sidebar-progress {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   Lesson panel
+   ========================================================================== */
+
+.lesson-head h1 {
+  margin-top: var(--space-4);
+  font-size: clamp(1.8rem, 1.3rem + 2vw, 2.75rem);
+}
+
+.lesson-head > p {
+  max-width: 62ch;
+  margin-top: var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--fs-lead);
+}
+
+.lesson-body {
+  margin-top: var(--space-6);
+}
+
+.lesson-body h3 {
+  margin-top: var(--space-5);
+}
+.lesson-body h3:first-child {
+  margin-top: 0;
+}
+
+.lesson-body p {
+  margin-top: 0.6rem;
+  color: var(--text-muted);
+  max-width: 68ch;
+}
+
+.lesson-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Tutor note — the one place gold appears in the lesson body, because it
+   marks something the system worked out about this student. */
+.tutor-note {
+  margin-top: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--sand);
+}
+
+.tutor-note p {
+  margin-top: 0.5rem;
+  color: var(--text);
+}
+
+.tutor-tag {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+/* Shown when no tutor analysis exists for the open topic. */
+.tutor-note.is-empty {
+  border-left-color: var(--sand-deep);
+  background: var(--surface-alt);
+}
+.tutor-note.is-empty .tutor-tag {
+  color: var(--text-muted);
+}
+.tutor-note.is-empty p {
+  color: var(--text-muted);
+}
+
+.lesson-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+/* ==========================================================================
+   Lesson change — a single low-velocity slide, nothing more
+   ========================================================================== */
+
+.lesson-panel {
+  transition:
+    opacity var(--t-mid) var(--ease),
+    transform var(--t-mid) var(--ease);
+}
+
+.lesson-panel.is-swapping {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-panel,
+  .lesson-panel.is-swapping {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   AI lesson cards — Quick summary / Understand it, rendered by
+   assets/js/ai-learning.js. The tutor note keeps its own existing look
+   (.tutor-note, defined above) so all three read as one family.
+   ========================================================================== */
+
+.ai-lesson-card {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ai-lesson-card + .ai-lesson-card,
+.ai-lesson-card + .tutor-note {
+  margin-top: var(--space-5);
+}
+
+.ai-lesson-card-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ai-lesson-summary .ai-lesson-card-label {
+  color: var(--accent-ink);
+}
+
+.ai-lesson-card-content p {
+  color: var(--text-muted);
+  max-width: 68ch;
+}
+.ai-lesson-card-content p + p {
+  margin-top: 0.6rem;
+}
+.ai-lesson-card-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.ai-lesson-card-content code {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 0.1em 0.4em;
+  border-radius: 5px;
+  color: var(--ink-deep);
+}
+.ai-lesson-card-content pre {
+  margin-top: 0.6rem;
+  padding: var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--grad-deep);
+  overflow-x: auto;
+}
+.ai-lesson-card-content pre code {
+  background: none;
+  padding: 0;
+  color: #eaf2ff;
+  font-size: 0.86em;
+  line-height: 1.6;
+}
+
+.ai-lesson-loading,
+.ai-lesson-error {
+  align-items: start;
+  text-align: left;
+}
+.ai-lesson-loading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+}
+.ai-lesson-loading p {
+  color: var(--text-muted);
+}
+.ai-lesson-error p {
+  color: var(--text);
+  margin-bottom: var(--space-3);
+}
+
+/* ==========================================================================
+   AI topic modal — "what would you like to learn today?"
+   Shown on load until an AI learning session exists; premium glass card
+   over a blurred backdrop, restrained to the brand's own blues.
+   ========================================================================== */
+
+body.no-scroll {
+  overflow: hidden;
+}
+
+.ai-topic-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+}
+
+.ai-topic-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 100% at 50% 0%, rgba(4, 40, 126, 0.82) 0%, rgba(6, 15, 32, 0.92) 100%);
+  backdrop-filter: blur(6px) saturate(115%);
+  -webkit-backdrop-filter: blur(6px) saturate(115%);
+  opacity: 0;
+  transition: opacity var(--t-mid) var(--ease);
+}
+
+.ai-topic-card {
+  position: relative;
+  width: min(480px, 100%);
+  padding: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  border-radius: var(--r-xl);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(245, 248, 252, 0.97) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--sh-lg);
+  overflow: hidden;
+  opacity: 0;
+  transform: translate3d(0, 16px, 0) scale(0.98);
+  transition: opacity var(--t-mid) var(--ease), transform var(--t-mid) var(--ease);
+}
+
+.ai-topic-modal.is-open .ai-topic-backdrop {
+  opacity: 1;
+}
+.ai-topic-modal.is-open .ai-topic-card {
+  opacity: 1;
+  transform: none;
+}
+
+.ai-topic-orb {
+  position: absolute;
+  top: -90px;
+  right: -90px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(61, 191, 248, 0.35) 0%, rgba(61, 191, 248, 0) 70%);
+  pointer-events: none;
+}
+
+.ai-topic-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  padding: 0.35rem 0.75rem 0.35rem 0.6rem;
+}
+
+.ai-topic-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(61, 191, 248, 0.28);
+  animation: ai-pulse 2.2s var(--ease) infinite;
+}
+
+@keyframes ai-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(61, 191, 248, 0.28); }
+  50% { box-shadow: 0 0 0 6px rgba(61, 191, 248, 0.1); }
+}
+
+.ai-topic-card h2 {
+  position: relative;
+  margin-top: var(--space-4);
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.85rem);
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ai-topic-sub {
+  position: relative;
+  margin-top: 0.6rem;
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  max-width: 46ch;
+}
+
+.ai-topic-form {
+  position: relative;
+  margin-top: var(--space-5);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.ai-topic-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ai-topic-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  color: var(--text);
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+.ai-topic-input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.ai-topic-submit {
+  width: 100%;
+  justify-content: center;
+}
+
+.ai-topic-loading {
+  position: relative;
+  margin-top: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ai-topic-loading p {
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+}
+
+.ai-topic-spinner {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid var(--accent-soft);
+  border-top-color: var(--cobalt);
+  animation: ai-spin 0.75s linear infinite;
+}
+
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ai-topic-error {
+  position: relative;
+  margin-top: var(--space-4);
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--fs-small);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-topic-backdrop,
+  .ai-topic-card {
+    transition: none;
+  }
+  .ai-topic-dot,
+  .ai-topic-spinner {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .learning-shell {
+    grid-template-columns: 1fr;
+  }
+  .learning-sidebar {
+    position: static;
+  }
+  .topic-list {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: grid;
+  }
+}

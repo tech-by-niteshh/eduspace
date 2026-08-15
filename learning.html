@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning — EduSpace</title>
+<meta name="description" content="Your personalized EduSpace learning path.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon-180.png">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/learning.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo" aria-label="EduSpace home"><img class="mark" src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span class="nav-wordmark">EduSpace</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="learning.html">Learning</a></li>
+      <li><a href="quiz.html">Quiz</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost">Log in</a>
+      <a href="signup.html" class="btn btn-primary">Get started</a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<div class="ai-topic-modal" id="ai-topic-modal" role="dialog" aria-modal="true" aria-labelledby="ai-topic-modal-title" hidden>
+  <div class="ai-topic-backdrop"></div>
+  <div class="ai-topic-card">
+    <div class="ai-topic-orb" aria-hidden="true"></div>
+    <span class="ai-topic-badge"><span class="ai-topic-dot"></span>EduSpace AI</span>
+    <h2 id="ai-topic-modal-title">What would you like to learn today?</h2>
+    <p class="ai-topic-sub">Tell EduSpace what you're curious about, and we'll build a personalized learning path for you.</p>
+
+    <form class="ai-topic-form" id="ai-topic-form" novalidate>
+      <label class="ai-topic-label" for="ai-topic-input">Topic</label>
+      <input type="text" id="ai-topic-input" class="ai-topic-input" placeholder="e.g. Python, Machine Learning, Calculus..." maxlength="80" autocomplete="off" spellcheck="false">
+      <button type="submit" class="btn btn-primary ai-topic-submit" id="ai-topic-submit">
+        <span>Build my learning path</span>
+      </button>
+    </form>
+
+    <div class="ai-topic-loading" id="ai-topic-loading" hidden>
+      <span class="ai-topic-spinner" aria-hidden="true"></span>
+      <p id="ai-topic-loading-text">Analyzing your topic&hellip;</p>
+    </div>
+
+    <p class="ai-topic-error" id="ai-topic-error" role="alert" hidden></p>
+  </div>
+</div>
+
+<main class="learning-main">
+  <div class="container learning-shell">
+
+    <aside class="learning-sidebar reveal reveal-left">
+      <div class="learning-sidebar-head">
+        <span class="eyebrow">Your path</span>
+        <button type="button" class="ai-new-topic-btn" id="ai-new-topic-btn" hidden>New topic</button>
+      </div>
+      <h3 id="sidebar-unit-name">Fractions unit</h3>
+      <ul class="topic-list" id="topic-list">
+        <li class="topic-item done" data-topic="0">
+          <span class="topic-status">✓</span>
+          <span class="topic-name">What is a fraction</span>
+        </li>
+        <li class="topic-item done" data-topic="1">
+          <span class="topic-status">✓</span>
+          <span class="topic-name">Equivalent fractions</span>
+        </li>
+        <li class="topic-item active" data-topic="2">
+          <span class="topic-status">●</span>
+          <span class="topic-name">Adding unlike denominators</span>
+        </li>
+        <li class="topic-item" data-topic="3">
+          <span class="topic-status">○</span>
+          <span class="topic-name">Subtracting fractions</span>
+        </li>
+        <li class="topic-item" data-topic="4">
+          <span class="topic-status">○</span>
+          <span class="topic-name">Multiplying fractions</span>
+        </li>
+      </ul>
+      <div class="sidebar-progress">
+        <span class="diag-label">Unit progress</span>
+        <div class="auth-progress"><div class="auth-progress-bar" id="unit-progress-bar" style="width:40%"></div></div>
+        <span class="auth-progress-label" id="unit-progress-label">2 of 5 topics complete</span>
+      </div>
+    </aside>
+
+    <section class="lesson-panel reveal reveal-right">
+      <div class="lesson-head">
+        <span class="pill">Topic 3 of 5</span>
+        <h1>Adding fractions with unlike denominators</h1>
+        <p>Before you can add two fractions, they need to share the same denominator. Here's the idea, in the order EduSpace thinks will make it click for you.</p>
+      </div>
+
+      <div class="lesson-body card">
+        <h3>Step 1 — Find a common denominator</h3>
+        <p>To add <strong>3/4</strong> and <strong>1/2</strong>, find a number both 4 and 2 divide into evenly. That number is 4.</p>
+
+        <h3>Step 2 — Convert each fraction</h3>
+        <p><strong>3/4</strong> already has a denominator of 4. <strong>1/2</strong> becomes <strong>2/4</strong> by multiplying the top and bottom by 2.</p>
+
+        <h3>Step 3 — Add the numerators only</h3>
+        <p><strong>3/4 + 2/4 = 5/4</strong>, which simplifies to <strong>1 1/4</strong>.</p>
+
+        <div class="tutor-note">
+          <span class="tutor-tag">AI tutor note</span>
+          <p>Based on your last attempt, you added the denominators too — that's the most common early mistake here. Only the numerators combine once the denominators match.</p>
+        </div>
+      </div>
+
+      <div class="lesson-actions">
+        <button class="btn btn-ghost" id="mark-review">Mark for review</button>
+        <button class="btn btn-ghost" id="mark-complete">Mark complete</button>
+        <a href="quiz.html" class="btn btn-primary">Practice this topic</a>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand"><img src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span>EduSpace</span></div>
+        <p>AI-powered personalized learning that understands the student, not just the answer.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="learning.html">Learning</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#about">Our members</a></li>
+          <li><a href="index.html#support">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Follow</h4>
+        <ul>
+          <li><a href="https://instagram.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <li><a href="https://x.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">X / Twitter</a></li>
+          <li><a href="https://www.linkedin.com/in/nitesh-chaurasiya-a7b2aa3a5/" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="tel:+14052559594">+1 (405) 2559594</a></li>
+          <li><a href="mailto:niteshh0x0@gmail.com">niteshh0x0@gmail.com</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 EduSpace. All rights reserved.</span>
+      <span>Made for the AI-Powered Personalized Learning Ecosystem hackathon.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/curriculum.js"></script>
+<script src="assets/js/ai-learning.js"></script>
+<script src="assets/js/learning.js"></script>
+</body>
+</html>

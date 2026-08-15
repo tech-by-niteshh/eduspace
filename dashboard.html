@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — EduSpace</title>
+<meta name="description" content="See what you understand, what needs work, and what's next.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon-180.png">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/dashboard.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo" aria-label="EduSpace home"><img class="mark" src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span class="nav-wordmark">EduSpace</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="learning.html">Learning</a></li>
+      <li><a href="quiz.html">Quiz</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost">Log in</a>
+      <a href="signup.html" class="btn btn-primary">Get started</a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<main class="dash-main">
+  <div class="container">
+
+    <div class="dash-head reveal reveal-fade">
+      <div>
+        <span class="eyebrow" id="dash-user">Welcome back</span>
+        <h1>Your learning, at a glance</h1>
+      </div>
+      <a href="quiz.html" class="btn btn-primary">Continue practicing</a>
+    </div>
+
+    <!-- Filled by dashboard.js only when there is no logged-in student. -->
+    <div class="dash-notice reveal" id="dash-notice" hidden></div>
+
+    <!-- Values below are placeholders. dashboard.js replaces them with real
+         numbers, or leaves the em dash when no data exists yet. -->
+    <div class="dash-stats reveal">
+      <div class="stat-card">
+        <span class="diag-label">Overall understanding</span>
+        <strong id="stat-understanding">&mdash;</strong>
+        <span class="stat-note">Loading&hellip;</span>
+      </div>
+      <div class="stat-card">
+        <span class="diag-label">Weak topics</span>
+        <strong id="stat-weak">&mdash;</strong>
+        <span class="stat-note">Loading&hellip;</span>
+      </div>
+      <div class="stat-card">
+        <span class="diag-label">Day streak</span>
+        <strong id="stat-streak">&mdash;</strong>
+        <span class="stat-note">Loading&hellip;</span>
+      </div>
+      <div class="stat-card">
+        <span class="diag-label">Questions answered</span>
+        <strong id="stat-questions">&mdash;</strong>
+        <span class="stat-note">Loading&hellip;</span>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+
+      <section class="dash-panel card reveal">
+        <div class="panel-head">
+          <h2>Understanding by topic</h2>
+          <span class="stat-note" id="topic-panel-note">Updated after every answer</span>
+        </div>
+        <div class="topic-bars" id="topic-bars"></div>
+      </section>
+
+      <section class="dash-panel card reveal">
+        <div class="panel-head">
+          <h2>Weak topics</h2>
+        </div>
+        <ul class="weak-list" id="weak-list"></ul>
+      </section>
+
+    </div>
+
+    <section class="dash-panel card reveal activity-panel">
+      <div class="panel-head">
+        <h2>Recent activity</h2>
+      </div>
+      <ul class="activity-list" id="activity-list"></ul>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand"><img src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span>EduSpace</span></div>
+        <p>AI-powered personalized learning that understands the student, not just the answer.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="learning.html">Learning</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#about">Our members</a></li>
+          <li><a href="index.html#support">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Follow</h4>
+        <ul>
+          <li><a href="https://instagram.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <li><a href="https://x.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">X / Twitter</a></li>
+          <li><a href="https://www.linkedin.com/in/nitesh-chaurasiya-a7b2aa3a5/" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="tel:+14052559594">+1 (405) 2559594</a></li>
+          <li><a href="mailto:niteshh0x0@gmail.com">niteshh0x0@gmail.com</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 EduSpace. All rights reserved.</span>
+      <span>Made for the AI-Powered Personalized Learning Ecosystem hackathon.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/curriculum.js"></script>
+<script src="assets/js/dashboard.js"></script>
+</body>
+</html>

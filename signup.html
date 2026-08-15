@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create your account — EduSpace</title>
+<meta name="description" content="Create your free EduSpace account and start a learning path built around you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon-180.png">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/auth.css">
+<link rel="stylesheet" href="assets/css/signup.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo" aria-label="EduSpace home"><img class="mark" src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span class="nav-wordmark">EduSpace</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="learning.html">Learning</a></li>
+      <li><a href="quiz.html">Quiz</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost">Log in</a>
+      <a href="signup.html" class="btn btn-primary">Get started</a>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<main class="auth-main">
+  <section class="auth-section">
+    <div class="container auth-grid">
+
+      <div class="auth-card reveal reveal-left">
+        <h2>Create your account</h2>
+        <p class="auth-card-sub">Start a learning path that adapts to you from question one.</p>
+
+        <form id="signup-form" novalidate>
+          <div class="field" id="field-name">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name" required>
+            <span class="field-error">Enter your name.</span>
+          </div>
+
+          <div class="field" id="field-email">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+            <span class="field-error">Enter a valid email address.</span>
+          </div>
+
+          <div class="field" id="field-grade">
+            <label for="grade">Grade / level</label>
+            <select id="grade" name="grade" required>
+              <option value="">Select your level</option>
+              <option value="middle">Middle school</option>
+              <option value="high">High school</option>
+              <option value="college">College</option>
+              <option value="self">Self-taught / other</option>
+            </select>
+            <span class="field-error">Select your level.</span>
+          </div>
+
+          <div class="field" id="field-password">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="At least 6 characters" autocomplete="new-password" required>
+            <span class="field-error">Password must be at least 6 characters.</span>
+            <span class="field-hint">Use at least 6 characters.</span>
+          </div>
+
+          <label class="checkbox-label terms-row">
+            <input type="checkbox" id="terms" name="terms" required>
+            I agree to the Terms and Privacy Policy
+          </label>
+
+          <button type="submit" class="btn btn-primary btn-block">Create account</button>
+          <p class="form-status" id="signup-status" role="status"></p>
+        </form>
+
+        <p class="auth-switch">Already have an account? <a href="login.html">Log in</a></p>
+      </div>
+
+      <div class="auth-side reveal reveal-right">
+        <span class="eyebrow">What you get</span>
+        <h1>A learning path shaped around what you don't know yet.</h1>
+        <p>No generic course order. EduSpace figures out your weak topics as you go and adjusts what's next — automatically.</p>
+        <ul class="signup-benefits">
+          <li><span class="diag-dot"></span> Adaptive difficulty per topic</li>
+          <li><span class="diag-dot"></span> AI tutor that explains the actual mistake</li>
+          <li><span class="diag-dot"></span> A dashboard that shows real progress, not just scores</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand"><img src="assets/images/logo-mark.png" alt="" width="128" height="128" decoding="async"><span>EduSpace</span></div>
+        <p>AI-powered personalized learning that understands the student, not just the answer.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="learning.html">Learning</a></li>
+          <li><a href="quiz.html">Quiz</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#about">Our members</a></li>
+          <li><a href="index.html#support">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Follow</h4>
+        <ul>
+          <li><a href="https://instagram.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <li><a href="https://x.com/tech_by_niteshh" target="_blank" rel="noopener noreferrer">X / Twitter</a></li>
+          <li><a href="https://www.linkedin.com/in/nitesh-chaurasiya-a7b2aa3a5/" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="tel:+14052559594">+1 (405) 2559594</a></li>
+          <li><a href="mailto:niteshh0x0@gmail.com">niteshh0x0@gmail.com</a></li>
+          <li><a href="https://t.me/tech_by_niteshh" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 EduSpace. All rights reserved.</span>
+      <span>Made for the AI-Powered Personalized Learning Ecosystem hackathon.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/signup.js"></script>
+</body>
+</html>
