@@ -36,15 +36,23 @@ app.add_middleware(
 )
 
 # Routes ko Master App me add karein
-app.include_router(signup_router)
-app.include_router(login_router)
+#
+# Every router is nested under /api so a single Vercel rewrite ("/api/:path*"
+# -> this function) can hand off all API traffic while static files (index.html,
+# learning.html, assets/, ...) are served directly by Vercel at their own
+# paths. This only adds a prefix — each router's own path is unchanged, e.g.
+# data/login.py's "/login" becomes "/api/login", learning_router's
+# "/learning/start" becomes "/api/learning/start". Local development
+# (uvicorn/`python server.py`) picks up the same prefix automatically.
+app.include_router(signup_router, prefix="/api")
+app.include_router(login_router, prefix="/api")
 # Integration point for the AI pipeline. Reports available: false until the
 # modules in ai/ and learning/ are implemented.
-app.include_router(insights_router)
+app.include_router(insights_router, prefix="/api")
 # AI-generated learning paths — see backend/learning/learning_router.py.
-app.include_router(learning_router)
+app.include_router(learning_router, prefix="/api")
 # AI-powered adaptive quiz — see backend/quiz/quiz_router.py.
-app.include_router(quiz_router)
+app.include_router(quiz_router, prefix="/api")
 
 
 @app.get("/")

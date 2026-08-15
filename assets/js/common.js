@@ -41,7 +41,11 @@
      ------------------------------------------------------------------ */
   EduSpace.api = {
     /**
-     * @param {string} path   e.g. "/login"
+     * @param {string} path   e.g. "/login" — routed to backend/server.py's
+     *                        "/api/login" (see the /api include_router
+     *                        prefix in backend/server.py). Callers keep
+     *                        passing the unprefixed path; this is the one
+     *                        place "/api" gets added.
      * @param {object} [opts] {method, body, timeoutMs}
      */
     async request(path, opts = {}) {
@@ -50,7 +54,7 @@
       const timer = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        const response = await fetch(`${EduSpace.API_BASE_URL}${path}`, {
+        const response = await fetch(`${EduSpace.API_BASE_URL}/api${path}`, {
           method,
           headers: body ? { "Content-Type": "application/json" } : undefined,
           body: body ? JSON.stringify(body) : undefined,

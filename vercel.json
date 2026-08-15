@@ -6,11 +6,7 @@
     }
   },
   "rewrites": [
-    { "source": "/login", "destination": "/backend/server.py" },
-    { "source": "/signup", "destination": "/backend/server.py" },
-    { "source": "/insights/:path*", "destination": "/backend/server.py" },
-    { "source": "/learning/:path*", "destination": "/backend/server.py" },
-    { "source": "/quiz/:path*", "destination": "/backend/server.py" },
+    { "source": "/api/:path*", "destination": "/backend/server.py" },
     { "source": "/docs", "destination": "/backend/server.py" },
     { "source": "/openapi.json", "destination": "/backend/server.py" }
   ]
