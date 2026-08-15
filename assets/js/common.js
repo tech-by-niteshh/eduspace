@@ -21,8 +21,17 @@
 
   /* API base for the FastAPI server in backend/server.py.
      Declared once here — login.js and signup.js used to hardcode their own
-     copy of this string. */
-  EduSpace.API_BASE_URL = "http://127.0.0.1:8000";
+     copy of this string.
+
+     Local dev (README): frontend on 127.0.0.1:5500, backend on
+     127.0.0.1:8000 — two different origins, so the base URL must stay
+     absolute there. In any other deployment (e.g. the Vercel domain, where
+     backend and frontend are served from the same origin) requests should
+     go to the current origin instead, or the browser will try to reach a
+     backend on the visitor's own machine and every request will fail. */
+  EduSpace.API_BASE_URL = ["127.0.0.1", "localhost"].includes(window.location.hostname)
+    ? "http://127.0.0.1:8000"
+    : window.location.origin;
 
   /* ------------------------------------------------------------------
      API helper

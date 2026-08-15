@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "backend/server.py", "use": "@vercel/python" },
+    { "src": "assets/**", "use": "@vercel/static" },
+    { "src": "*.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/favicon.ico", "dest": "/assets/images/favicon.ico" },
+    { "src": "/(login|signup)", "dest": "/backend/server.py" },
+    { "src": "/(insights|learning|quiz)/(.*)", "dest": "/backend/server.py" },
+    { "src": "/(docs|openapi.json|redoc)", "dest": "/backend/server.py" },
+    { "src": "/", "dest": "/backend/server.py" },
+    { "src": "/([^/]+\\.html)", "dest": "/$1" },
+    { "src": "/(.*)", "dest": "/backend/server.py" }
+  ]
+}
