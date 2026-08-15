@@ -15,8 +15,8 @@ import logging
 import re
 from typing import Optional
 
-from ai import prompts
-from ai.providers import gemini_generate, groq_chat
+from backend.ai import prompts
+from backend.ai.providers import gemini_generate, groq_chat
 
 logger = logging.getLogger(__name__)
 

@@ -1,62 +1,125 @@
 """
-In-memory storage for AI-generated quiz sessions.
+Stateless quiz sessions — an encrypted, tamper-proof token, not server memory.
 
-Mirrors learning/learning_session.py: EduSpace has no database for AI
-content, so a quiz session lives in this process's memory only, addressed
-by a generated quiz id, and is never required for the app to keep working
-elsewhere. Sessions expire after an hour so a long-abandoned quiz does not
-sit in memory forever.
+WHY NOT AN IN-MEMORY DICT (what this file used to be): a serverless
+deployment gives no guarantee that two requests for the same quiz land on
+the same warm process. On Vercel, the POST /quiz/start that creates a quiz
+and the POST /quiz/question that answers it a few seconds later may well be
+handled by two different cold-started instances with two different empty
+dicts — every quiz would 404 with QUIZ_NOT_FOUND in production. (This is
+NOT a problem for backend/learning/learning_session.py: its in-memory store
+is only an optional cache keyed by topic+part text, never read by session
+id, so a cache miss just costs one extra AI call instead of breaking
+anything. The quiz session below is load-bearing — it holds the
+authoritative correct answers — so it gets a different design.)
 
-The stored question objects keep their authoritative correct_answer index —
-quiz_service.py strips that field before anything is sent to the browser.
+Instead, the entire session (topic, questions with their correct answers,
+and answers recorded so far) is encrypted with Fernet (AES128-CBC + HMAC,
+authenticated and tamper-evident) and handed to the browser AS the
+"quiz_id" string. The browser carries it around like an opaque token and
+sends it back on every request; this file just decrypts+verifies it,
+never trusts it blindly (a modified token fails the HMAC check and decrypts
+to nothing), and re-encrypts an updated copy after each answer.
+
+This keeps the same guarantee the in-memory version had — the frontend
+can never determine or forge correctness, because it cannot decrypt the
+token to read or edit the embedded correct_answer index — while working
+identically on a single long-lived local dev process and on independent,
+memory-isolated serverless invocations.
 """
 
-import time
-import uuid
+import base64
+import hashlib
+import json
+import os
 from typing import Optional
 
-_SESSIONS: dict = {}
+from cryptography.fernet import Fernet, InvalidToken
 
-_SESSION_TTL_SECONDS = 60 * 60
+SESSION_TTL_SECONDS = 60 * 60
 
 
-def _sweep() -> None:
-    now = time.time()
-    expired = [qid for qid, session in _SESSIONS.items() if now - session["created_at"] > _SESSION_TTL_SECONDS]
-    for qid in expired:
-        _SESSIONS.pop(qid, None)
+def _load_key() -> bytes:
+    """Derive a Fernet key from QUIZ_SESSION_SECRET.
+
+    Fernet requires a 32-byte urlsafe-base64 key; SHA-256 turns any plain
+    passphrase from the environment into exactly that, so the env var stays
+    a simple string instead of asking a developer to generate a Fernet key
+    themselves.
+
+    QUIZ_SESSION_SECRET MUST be set (and stable) in production — every
+    serverless instance needs to derive the SAME key to decrypt tokens
+    issued by any other instance. Locally, a per-process random fallback is
+    fine: one `uvicorn` process serves the whole dev session, so encrypt
+    and decrypt always happen with the same key even though it was never
+    configured.
+    """
+    secret = os.getenv("QUIZ_SESSION_SECRET")
+    if not secret:
+        secret = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+    digest = hashlib.sha256(secret.encode("utf-8")).digest()
+    return base64.urlsafe_b64encode(digest)
+
+
+_FERNET = Fernet(_load_key())
+
+
+def _encode(data: dict) -> str:
+    payload = json.dumps(data, separators=(",", ":")).encode("utf-8")
+    return _FERNET.encrypt(payload).decode("ascii")
+
+
+def _decode(token: str) -> Optional[dict]:
+    try:
+        payload = _FERNET.decrypt(token.encode("ascii"), ttl=SESSION_TTL_SECONDS)
+        return json.loads(payload)
+    except (InvalidToken, ValueError, TypeError):
+        return None
 
 
 def create_session(topic: str, questions: list) -> str:
-    """``questions`` is the full, authoritative list from ai_agent.generate_quiz."""
-    _sweep()
-    quiz_id = str(uuid.uuid4())
-    _SESSIONS[quiz_id] = {
-        "topic": topic,
-        "questions": {q["id"]: q for q in questions},
-        "answers": {},  # question_id -> {"selected_answer", "correct", "feedback"}
-        "created_at": time.time(),
-        "completed": False,
-    }
-    return quiz_id
+    """``questions`` is the full, authoritative list from ai_agent.generate_quiz.
+
+    Returns the initial quiz_id token — JSON object keys must be strings,
+    so question/answer ids are stored as strings and converted back to int
+    by get_session().
+    """
+    return _encode(
+        {
+            "topic": topic,
+            "questions": {str(q["id"]): q for q in questions},
+            "answers": {},
+        }
+    )
 
 
-def get_session(quiz_id: str) -> Optional[dict]:
-    return _SESSIONS.get(quiz_id)
+def get_session(token: str) -> Optional[dict]:
+    """Decrypt and verify ``token``. Returns None if it is invalid, tampered
+    with, or older than SESSION_TTL_SECONDS."""
+    data = _decode(token)
+    if not data or "questions" not in data or "answers" not in data:
+        return None
+    data["questions"] = {int(k): v for k, v in data["questions"].items()}
+    data["answers"] = {int(k): v for k, v in data["answers"].items()}
+    return data
 
 
-def record_answer(quiz_id: str, question_id: int, selected_answer: int, correct: bool, feedback: dict) -> None:
-    session = _SESSIONS.get(quiz_id)
+def record_answer(token: str, question_id: int, selected_answer: int, correct: bool, feedback: dict) -> Optional[str]:
+    """Return a NEW token with this answer added — the caller (quiz_service.py)
+    must send this new token back to the browser; the old token is untouched
+    (there is nothing server-side left to mutate)."""
+    session = get_session(token)
     if not session:
-        return
+        return None
     session["answers"][question_id] = {
         "selected_answer": selected_answer,
         "correct": correct,
         "feedback": feedback,
     }
-
-
-def mark_completed(quiz_id: str) -> None:
-    session = _SESSIONS.get(quiz_id)
-    if session:
-        session["completed"] = True
+    return _encode(
+        {
+            "topic": session["topic"],
+            "questions": {str(k): v for k, v in session["questions"].items()},
+            "answers": {str(k): v for k, v in session["answers"].items()},
+        }
+    )

@@ -377,12 +377,17 @@
     submittingAnswer = false;
 
     const data = res.data;
-    if (!res.ok || !data || data.success !== true || !data.feedback) {
+    if (!res.ok || !data || data.success !== true || !data.feedback || !data.quiz_id) {
       optionsEl.querySelectorAll(".quiz-option").forEach((b) => (b.disabled = false));
       if (submitBtn) submitBtn.disabled = false;
       showInlineNotice((data && data.error && data.error.message) || res.error || GENERIC_ERROR);
       return;
     }
+
+    // Quiz sessions are stateless tokens, not server memory (see
+    // backend/quiz/quiz_session.py) — every answer issues a new quiz_id
+    // that must be used for the next request.
+    quizState.quiz_id = data.quiz_id;
 
     const selectedIndex = quizState.selected;
     quizState.answers[q.id] = {

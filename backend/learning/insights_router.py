@@ -10,8 +10,8 @@ show an empty state rather than a made-up one.
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from ai import misconception, question_generator, tutor
-from learning import knowledge_model, pipeline
+from backend.ai import misconception, question_generator, tutor
+from backend.learning import knowledge_model, pipeline
 
 router = APIRouter(prefix="/insights", tags=["Insights"])
 

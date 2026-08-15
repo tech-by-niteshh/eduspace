@@ -1,11 +1,23 @@
 [project]
 name = "eduspace"
 version = "1.0.0"
-description = "EduSpace AI-powered personalized learning platform"
-requires-python = ">=3.11"
+description = "EduSpace — an AI-powered personalized learning platform (FastAPI backend, Gemini + Groq)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "requests>=2.31",
+  "pydantic>=2.7",
+  "python-dotenv>=1.0",
+  "email-validator>=2.1",
+  "cryptography>=42.0",
+]
 
-# Dependencies are declared in requirements.txt (Vercel's Python builder
-# installs from it directly) and are intentionally not duplicated here.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
 
-[tool.vercel]
-entrypoint = "backend.server:app"
+[tool.setuptools.packages.find]
+include = ["backend*", "api*"]

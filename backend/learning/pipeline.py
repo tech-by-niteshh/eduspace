@@ -25,8 +25,8 @@ on its own — no changes are needed here or in the frontend.
 
 from typing import Optional
 
-from ai import misconception, question_generator, tutor
-from learning import adaptive_engine, knowledge_model, progress_predictor
+from backend.ai import misconception, question_generator, tutor
+from backend.learning import adaptive_engine, knowledge_model, progress_predictor
 
 #: Stage name -> module that owns it. Used by the status endpoint.
 STAGES = (

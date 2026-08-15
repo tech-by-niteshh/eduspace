@@ -523,6 +523,18 @@
       openPart(learningSession.current_part, { animate: false });
       return;
     }
+
+    /* Deep link from elsewhere in EduSpace — e.g. quiz.html's "Learn <weak
+       topic>" result chips — starts a path for that topic immediately
+       instead of making the student retype it into the modal. */
+    const fromUrl = (new URLSearchParams(window.location.search).get("topic") || "").trim();
+    if (fromUrl && fromUrl.length <= MAX_TOPIC_LENGTH) {
+      window.history.replaceState(null, "", window.location.pathname);
+      showModal();
+      submitTopic(fromUrl);
+      return;
+    }
+
     showModal();
   }
 

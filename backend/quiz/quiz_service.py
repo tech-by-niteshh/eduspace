@@ -14,8 +14,8 @@ quiz/quiz_router.py.
 
 from typing import Optional
 
-from ai import ai_agent
-from quiz import quiz_session
+from backend.ai import ai_agent
+from backend.quiz import quiz_session
 
 TOTAL_QUESTIONS = ai_agent.QUIZ_QUESTION_COUNT
 
@@ -65,9 +65,11 @@ def submit_answer(quiz_id: str, question_id: int, selected_answer: int) -> dict:
 
     # Idempotent: a duplicate submission (double click, retried request)
     # returns the original result instead of re-scoring or re-calling Gemini.
+    # quiz_id is unchanged — nothing new was recorded, so there is no new token.
     existing = session["answers"].get(question_id)
     if existing:
         return {
+            "quiz_id": quiz_id,
             "correct": existing["correct"],
             "correct_index": question["correct_answer"],
             "feedback": existing["feedback"],
@@ -94,8 +96,15 @@ def submit_answer(quiz_id: str, question_id: int, selected_answer: int) -> dict:
             "We couldn't prepare feedback for that answer right now. Please try again.",
         )
 
-    quiz_session.record_answer(quiz_id, question_id, selected_answer, is_correct, feedback)
+    # There is no server-side session left to mutate — record_answer returns
+    # a NEW token with this answer baked in, and the caller (quiz_router.py)
+    # sends it back to the browser as the quiz_id to use from now on.
+    new_quiz_id = quiz_session.record_answer(quiz_id, question_id, selected_answer, is_correct, feedback)
+    if not new_quiz_id:
+        raise QuizError("QUIZ_NOT_FOUND", "This quiz session has expired. Please start a new quiz.")
+
     return {
+        "quiz_id": new_quiz_id,
         "correct": is_correct,
         "correct_index": question["correct_answer"],
         "feedback": feedback,
@@ -114,8 +123,6 @@ def finish_quiz(quiz_id: str) -> dict:
 
     correct_count = sum(1 for a in answers.values() if a["correct"])
     percentage = round((correct_count / total) * 100) if total else 0
-
-    quiz_session.mark_completed(quiz_id)
 
     # What Groq is allowed to see: question text, difficulty, whether it was
     # answered correctly, and the concept it tested (Gemini's own words from

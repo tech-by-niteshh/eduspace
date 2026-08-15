@@ -22,8 +22,8 @@ from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, field_validator
 
-from ai import ai_agent
-from learning import learning_session
+from backend.ai import ai_agent
+from backend.learning import learning_session
 
 logger = logging.getLogger(__name__)
 

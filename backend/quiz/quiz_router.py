@@ -18,7 +18,7 @@ import re
 from fastapi import APIRouter
 from pydantic import BaseModel, field_validator
 
-from quiz import quiz_service
+from backend.quiz import quiz_service
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +91,11 @@ def answer(payload: AnswerRequest):
 
     return {
         "success": True,
+        # A new, opaque quiz_id — the frontend must use this one for the
+        # next call (see backend/quiz/quiz_session.py for why: sessions are
+        # stateless tokens, not server memory, so recording an answer means
+        # issuing a new token rather than mutating one in place).
+        "quiz_id": result["quiz_id"],
         "correct": result["correct"],
         "correct_index": result["correct_index"],
         "feedback": result["feedback"],

@@ -23,15 +23,25 @@
      Declared once here — login.js and signup.js used to hardcode their own
      copy of this string.
 
-     Local dev (README): frontend on 127.0.0.1:5500, backend on
-     127.0.0.1:8000 — two different origins, so the base URL must stay
-     absolute there. In any other deployment (e.g. the Vercel domain, where
-     backend and frontend are served from the same origin) requests should
-     go to the current origin instead, or the browser will try to reach a
-     backend on the visitor's own machine and every request will fail. */
-  EduSpace.API_BASE_URL = ["127.0.0.1", "localhost"].includes(window.location.hostname)
-    ? "http://127.0.0.1:8000"
-    : window.location.origin;
+     Every call site in the codebase (login.js, signup.js, ai-learning.js,
+     ai-quiz.js, this file's EduSpace.insights, ...) calls EduSpace.api with
+     an unprefixed path like "/quiz/start" — backend/server.py's routes are
+     defined the same way, with no "/api" prefix. This one line is the only
+     place that needs to know which environment is running:
+
+       - Local dev: the FastAPI server listens on 127.0.0.1:8000 directly,
+         so "/quiz/start" must resolve to "http://127.0.0.1:8000/quiz/start".
+       - Vercel: the frontend and API share one origin, and api/index.py is
+         reached under "/api" (see vercel.json) — so the base becomes "/api"
+         and the same "/quiz/start" call resolves to "/api/quiz/start".
+
+     This never produces "/api/api/..." because no call site ever includes
+     "/api" itself — only this prefix does. */
+  EduSpace.API_BASE_URL = (() => {
+    const host = window.location.hostname;
+    const isLocal = host === "localhost" || host === "127.0.0.1" || host === "";
+    return isLocal ? "http://127.0.0.1:8000" : "/api";
+  })();
 
   /* ------------------------------------------------------------------
      API helper
@@ -41,11 +51,7 @@
      ------------------------------------------------------------------ */
   EduSpace.api = {
     /**
-     * @param {string} path   e.g. "/login" — routed to backend/server.py's
-     *                        "/api/login" (see the /api include_router
-     *                        prefix in backend/server.py). Callers keep
-     *                        passing the unprefixed path; this is the one
-     *                        place "/api" gets added.
+     * @param {string} path   e.g. "/login"
      * @param {object} [opts] {method, body, timeoutMs}
      */
     async request(path, opts = {}) {
@@ -54,7 +60,7 @@
       const timer = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        const response = await fetch(`${EduSpace.API_BASE_URL}/api${path}`, {
+        const response = await fetch(`${EduSpace.API_BASE_URL}${path}`, {
           method,
           headers: body ? { "Content-Type": "application/json" } : undefined,
           body: body ? JSON.stringify(body) : undefined,
