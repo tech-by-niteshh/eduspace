@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quiz — EduSpace</title>
-<meta name="description" content="Practice questions that adapt to how you answer.">
+<meta name="description" content="An AI-generated quiz that adapts to the topic you choose, with instant explanations and a personalized performance report.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,43 +37,77 @@
   </nav>
 </header>
 
-<main class="quiz-main">
-  <div class="container quiz-shell">
+<!-- AI quiz topic modal — shown on load until a quiz session exists.
+     Reuses the .ai-topic-* component from base.css (shared with
+     learning.html's "what would you like to learn" modal). -->
+<div class="ai-topic-modal" id="ai-quiz-modal" role="dialog" aria-modal="true" aria-labelledby="ai-quiz-modal-title" hidden>
+  <div class="ai-topic-backdrop"></div>
+  <div class="ai-topic-card">
+    <div class="ai-topic-orb" aria-hidden="true"></div>
+    <span class="ai-topic-badge"><span class="ai-topic-dot"></span>EduSpace AI</span>
+    <h2 id="ai-quiz-modal-title">Test your knowledge</h2>
+    <p class="ai-topic-sub">What would you like to quiz yourself on? EduSpace will generate five questions just for you.</p>
 
-    <div class="quiz-top reveal reveal-fade">
+    <form class="ai-topic-form" id="ai-quiz-form" novalidate>
+      <label class="ai-topic-label" for="ai-quiz-input">Topic</label>
+      <input type="text" id="ai-quiz-input" class="ai-topic-input" placeholder="e.g. Python, Machine Learning, Physics..." maxlength="80" autocomplete="off" spellcheck="false">
+      <button type="submit" class="btn btn-primary ai-topic-submit" id="ai-quiz-submit">
+        <span>Generate my quiz</span>
+      </button>
+    </form>
+
+    <div class="ai-topic-loading" id="ai-quiz-loading" hidden>
+      <span class="ai-topic-spinner" aria-hidden="true"></span>
+      <p id="ai-quiz-loading-text">Analyzing your topic&hellip;</p>
+    </div>
+
+    <p class="ai-topic-error" id="ai-quiz-error" role="alert" hidden></p>
+  </div>
+</div>
+
+<main class="quiz-main">
+  <div class="container quiz-shell" id="quiz-ai-shell" hidden>
+
+    <div class="quiz-top reveal reveal-fade is-visible">
       <div>
-        <span class="eyebrow">Practice</span>
-        <h1>Quick practice</h1>
+        <span class="eyebrow" id="quiz-ai-eyebrow">AI Quiz</span>
+        <h1 id="quiz-ai-topic-name">&nbsp;</h1>
       </div>
       <div class="quiz-meta">
-        <span id="quiz-position"></span>
-        <div class="quiz-progress"><div class="quiz-progress-bar" id="quiz-progress-bar" style="width:0%"></div></div>
+        <span id="quiz-ai-position" aria-live="polite"></span>
+        <div class="quiz-progress"><div class="quiz-progress-bar quiz-ai-progress-bar" id="quiz-ai-progress-bar" style="width:0%"></div></div>
       </div>
     </div>
 
-    <div class="quiz-card card reveal" id="quiz-card">
-      <!-- Question and options are rendered by quiz.js from curriculum.js. -->
-      <p class="quiz-question" id="quiz-question">Loading question&hellip;</p>
-      <div class="quiz-options" id="quiz-options"></div>
-
-      <div class="quiz-feedback" id="quiz-feedback" hidden>
-        <span class="feedback-label" id="feedback-label"></span>
-        <p id="feedback-text"></p>
+    <div class="quiz-ai-card card reveal is-visible" id="quiz-ai-card">
+      <div class="quiz-ai-card-overlay" id="quiz-ai-card-overlay" hidden>
+        <span class="ai-topic-spinner" aria-hidden="true"></span>
+        <p id="quiz-ai-card-overlay-text">Evaluating your answer&hellip;</p>
       </div>
+
+      <span class="quiz-ai-difficulty" id="quiz-ai-difficulty"></span>
+      <p class="quiz-question" id="quiz-ai-question">Loading question&hellip;</p>
+      <div class="quiz-options quiz-ai-options" id="quiz-ai-options" role="radiogroup" aria-label="Answer options"></div>
+
+      <div class="quiz-ai-feedback" id="quiz-ai-feedback" hidden aria-live="polite"></div>
 
       <div class="quiz-actions">
-        <button class="btn btn-ghost" id="skip-btn">Skip</button>
-        <button class="btn btn-primary" id="next-btn" disabled>Next question</button>
+        <span class="quiz-ai-hint" id="quiz-ai-hint">Select an answer to continue.</span>
+        <span class="quiz-ai-buttons">
+          <button class="btn btn-primary" id="quiz-ai-submit-btn" disabled>Submit answer</button>
+          <button class="btn btn-primary" id="quiz-ai-next-btn" hidden>Next question &rarr;</button>
+        </span>
       </div>
     </div>
 
-    <div class="quiz-done card reveal" id="quiz-done" hidden>
-      <span class="eyebrow">Session complete</span>
-      <h2>Nice work.</h2>
-      <p id="quiz-summary"></p>
+    <div class="quiz-ai-result card reveal is-visible" id="quiz-ai-result" hidden></div>
+
+    <div class="quiz-ai-fatal card reveal is-visible" id="quiz-ai-fatal" hidden>
+      <span class="eyebrow">Something went wrong</span>
+      <h2>We couldn&rsquo;t finish that.</h2>
+      <p id="quiz-ai-fatal-text">Something went wrong while preparing your quiz. Please try again.</p>
       <div class="lesson-actions">
-        <a href="learning.html" class="btn btn-ghost">Back to lesson</a>
-        <a href="dashboard.html" class="btn btn-primary">View dashboard</a>
+        <button class="btn btn-primary" id="quiz-ai-fatal-retry">Try again</button>
       </div>
     </div>
 
@@ -131,6 +165,7 @@
 
 <script src="assets/js/common.js"></script>
 <script src="assets/js/curriculum.js"></script>
+<script src="assets/js/ai-quiz.js"></script>
 <script src="assets/js/quiz.js"></script>
 </body>
 </html>

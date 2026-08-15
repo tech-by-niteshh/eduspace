@@ -256,7 +256,12 @@
      fenced ```code blocks```.
      ------------------------------------------------------------------ */
   function appendInline(parent, text) {
-    const re = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+    // Emphasis only counts when the asterisk hugs its content (no space right
+    // after "*" / before the closing "*") — the same flanking rule markdown
+    // itself uses to tell "*italic*" apart from a "* bullet" list marker, so
+    // a stray list-style "* " in AI output is left as plain text instead of
+    // swallowing everything up to the next "*".
+    const re = /(\*\*(?!\s)[^*]+?(?<!\s)\*\*|\*(?!\s)[^*]+?(?<!\s)\*|`[^`]+`)/g;
     let lastIndex = 0;
     let m;
     while ((m = re.exec(text)) !== null) {
@@ -268,6 +273,10 @@
         const strong = document.createElement("strong");
         strong.textContent = token.slice(2, -2);
         parent.appendChild(strong);
+      } else if (token.startsWith("*")) {
+        const em = document.createElement("em");
+        em.textContent = token.slice(1, -1);
+        parent.appendChild(em);
       } else {
         const code = document.createElement("code");
         code.textContent = token.slice(1, -1);

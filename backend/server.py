@@ -18,6 +18,7 @@ from data.login import router as login_router  # noqa: E402
 from data.signup import router as signup_router  # noqa: E402
 from learning.insights_router import router as insights_router  # noqa: E402
 from learning.learning_router import router as learning_router  # noqa: E402
+from quiz.quiz_router import router as quiz_router  # noqa: E402
 
 app = FastAPI(
     title="EduSpace Core Server",
@@ -42,6 +43,8 @@ app.include_router(login_router)
 app.include_router(insights_router)
 # AI-generated learning paths — see backend/learning/learning_router.py.
 app.include_router(learning_router)
+# AI-powered adaptive quiz — see backend/quiz/quiz_router.py.
+app.include_router(quiz_router)
 
 
 @app.get("/")
