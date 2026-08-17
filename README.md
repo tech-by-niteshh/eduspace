@@ -131,17 +131,33 @@ crashing the whole server.
 ## Deploying to Vercel
 
 ```bash
-npm install -g vercel   # or use `npx vercel`
-vercel login
-vercel                  # first deploy — links the project, deploys a Preview
+npm install -g vercel   # or use `npx vercel` without installing globally
+vercel login            # one-time interactive login
+vercel                  # links the project (first run) and deploys a Preview
 ```
 
-Then, in the Vercel dashboard for the project (Settings → Environment Variables), set at least
-`GEMINI_API1`, `GROQ_API1`, `QUIZ_SESSION_SECRET`, and `SHEETS_SCRIPT_API` (Production + Preview),
-and redeploy (`vercel --prod`) so the function picks them up.
+Set environment variables (see the table above) — either in the dashboard, or from the CLI:
 
-**How routing works — no `vercel.json` needed, and none exists in this repo.** Vercel's
-zero-config detection does two things automatically:
+```bash
+vercel env add GEMINI_API1 production
+vercel env add GROQ_API1 production
+vercel env add QUIZ_SESSION_SECRET production
+vercel env add SHEETS_SCRIPT_API production
+# repeat for preview/development environments too if you use them, and for
+# the optional GROQ_API2 / GROQ_MODEL / GEMINI_MODEL / CORS_ORIGINS
+```
+
+Then deploy to production:
+
+```bash
+vercel --prod
+```
+
+That's the whole deploy. Re-run `vercel --prod` any time after pushing new changes or adding/
+changing an environment variable (env var changes don't apply to a deployment retroactively).
+
+**How routing works.** Vercel's zero-config detection does two things automatically, and
+`vercel.json` (below) does not interfere with either:
 
 - Every file at the repo root and under `assets/` (`index.html`, `learning.html`, ...,
   `assets/css/*`, `assets/js/*`) is served as a static file, exactly as requested — `/` serves
@@ -157,11 +173,32 @@ zero-config detection does two things automatically:
   exactly one place (each router's own `prefix=`) that decides its real path — nothing computes
   or rewrites `/api/...` anywhere else, so an `/api/api/...` bug is structurally not possible.
 
-A `vercel.json` **used to exist** in this repo with a rewrite (`/api/(.*)` → `/api/index`) plus an
-ASGI wrapper in `api/index.py` that stripped the `/api` prefix back off before handing the request
-to `backend/server.py`'s (then-unprefixed) routes. That layer of indirection is gone: routes now
-carry their real `/api/...` path natively, matching Vercel's current documented behavior for
-ASGI apps under `api/`, and removing one more place a routing bug could hide.
+**`vercel.json`** exists only to configure two things — deliberately **not** routing, since the
+zero-config behavior above already handles that correctly on its own and a routing rule is exactly
+what caused problems previously (see
+[Root cause of the reported failure](#root-cause-of-the-reported-failure)):
+
+```json
+{
+  "framework": null,
+  "functions": {
+    "api/index.py": { "maxDuration": 60 }
+  }
+}
+```
+
+- `"framework": null` pins "no framework" (the "Other" preset) in version control, instead of
+  leaving it as a dashboard toggle that could drift or get changed independent of this repo — this
+  directly forecloses one of the two suspected causes of the earlier `/backend/server.py` routing
+  bug.
+- `"functions"` raises `api/index.py`'s execution time limit to 60 seconds (Vercel's Hobby-tier
+  default is much shorter). Gemini/Groq calls — especially quiz generation, which can retry once
+  on an invalid response (see `backend/ai/ai_agent.py`) — can comfortably take longer than a
+  default timeout allows; 60s gives real headroom without needing a paid plan's longer limits.
+
+No `rewrites`, no `routes`, no `builds` — those are exactly the fields that, in an earlier
+iteration of this file, either added unnecessary indirection or (in the legacy `builds`/`routes`
+format some other tutorials use) could point a URL directly at `backend/server.py`.
 
 **`.vercelignore`** keeps the deployment small and predictable regardless of local state — it
 excludes `.venv/`, `__pycache__/`, `.env`, and other local-only files so a `vercel deploy` run
