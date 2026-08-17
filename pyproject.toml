@@ -1,15 +1,22 @@
 [project]
 name = "eduspace"
 version = "1.0.0"
-description = "EduSpace — an AI-powered personalized learning platform"
-requires-python = ">=3.12,<3.13"
-
+description = "EduSpace — an AI-powered personalized learning platform (FastAPI backend, Gemini + Groq)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+# Kept identical to requirements.txt on purpose — requirements.txt is what
+# Vercel's Python runtime actually installs from; this list is metadata for
+# editors/tooling only. No [build-system] here: Vercel doesn't build this
+# project as an installable package, it just installs requirements.txt and
+# imports api/index.py directly, so a build backend would be unused
+# complexity with no effect on deployment.
 dependencies = [
-    "fastapi==0.141.1",
-    "uvicorn==0.52.3",
-    "requests==2.34.2",
-    "pydantic==2.13.4",
-    "python-dotenv==1.2.3",
-    "email-validator==2.3.0",
-    "cryptography==50.0.0"
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "requests>=2.31",
+  "pydantic>=2.7",
+  "python-dotenv>=1.0",
+  "email-validator>=2.1",
+  "cryptography>=42.0",
 ]

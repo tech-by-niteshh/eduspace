@@ -20,13 +20,16 @@ request under "/api/*" to api/index.py's ASGI app exactly as received, and
 FastAPI's own router matches it directly, because the paths already agree.
 
 On top of the API, this same app ALSO serves the static frontend
-(index.html, learning.html, .../assets/*) when run locally, so
-`python backend/server.py` alone — no separate static file server — gives
-a fully working app at http://127.0.0.1:8000/. On Vercel this part is
-inert: "/", "/*.html" and "/assets/*" are served by Vercel's static layer
-before a request would ever reach this Python function, so these routes
-just never get invoked there. It's a pure local-dev convenience, not a
-second copy of the frontend-serving logic.
+(index.html, learning.html, .../assets/*): originally added purely for
+local dev convenience (`python backend/server.py` alone, no separate
+static file server, gives a fully working app at http://127.0.0.1:8000/),
+these same routes are now ALSO what serves the static pages on Vercel —
+see vercel.json, whose "routes" send every path (not just "/api/*") to
+api/index.py, and whose "builds.config.includeFiles" makes sure index.html,
+the other pages, and assets/ actually get bundled into the function (they
+aren't reachable through Python's import graph the way backend/**.py is,
+so the builder wouldn't otherwise know to include them). One code path,
+same behavior, both locally and in production.
 
 WHY "python backend/server.py" NEEDS THE __main__ GUARD BELOW: running a
 file directly puts its own directory (backend/) on sys.path[0], not the

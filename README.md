@@ -123,7 +123,7 @@ crashing the whole server.
 | `SHEETS_SCRIPT_API` | for login/signup | `backend/data/login.py`, `signup.py` | Google Apps Script Web App URL. |
 | `GROQ_API1`, `GROQ_API2` | for learning + quiz results | `backend/ai/providers.py` | First non-empty one is used; two keys let you swap a rate-limited one without a deploy. |
 | `GEMINI_API1` | for learning + quiz | `backend/ai/providers.py` | |
-| `GROQ_MODEL` | optional | `backend/ai/providers.py` | Defaults to `llama-3.3-70b-versatile`. |
+| `GROQ_MODEL` | optional | `backend/ai/providers.py` | Defaults to `openai/gpt-oss-120b`. |
 | `GEMINI_MODEL` | optional | `backend/ai/providers.py` | Defaults to `gemini-3.1-flash-lite`. |
 | `QUIZ_SESSION_SECRET` | **required in production** | `backend/quiz/quiz_session.py` | Encrypts quiz tokens. Optional locally (falls back to a random per-process key, fine for one long-lived dev server) but **must** be a real, stable value in production — see the architecture note above. Generate one with `python -c "import secrets; print(secrets.token_urlsafe(32))"`. |
 | `CORS_ORIGINS` | optional | `backend/server.py` | Comma-separated extra allowed origins for local dev (e.g. a non-default Live Server port). Not needed on Vercel — the frontend and API share one origin there. |
@@ -156,58 +156,65 @@ vercel --prod
 That's the whole deploy. Re-run `vercel --prod` any time after pushing new changes or adding/
 changing an environment variable (env var changes don't apply to a deployment retroactively).
 
-**How routing works.** Vercel's zero-config detection does two things automatically, and
-`vercel.json` (below) does not interfere with either:
-
-- Every file at the repo root and under `assets/` (`index.html`, `learning.html`, ...,
-  `assets/css/*`, `assets/js/*`) is served as a static file, exactly as requested — `/` serves
-  `index.html`, `/learning.html` serves `learning.html`, `/assets/js/common.js` serves that file,
-  with no configuration.
-- `api/index.py` exports a module-level ASGI `app` (a plain `from backend.server import app`,
-  re-exporting the one and only `FastAPI()` instance created in `backend/server.py`), so Vercel
-  turns it into a Serverless Function and forwards every request under `/api/*` to it verbatim —
-  full path included, no stripping, no rewriting. Because every router in `backend/` already
-  declares its real path with `/api` baked into its own prefix (e.g.
-  `APIRouter(prefix="/api/quiz")` in `backend/quiz/quiz_router.py`), FastAPI's router matches the
-  incoming path directly. There is exactly one FastAPI instance in the whole repository, and
-  exactly one place (each router's own `prefix=`) that decides its real path — nothing computes
-  or rewrites `/api/...` anywhere else, so an `/api/api/...` bug is structurally not possible.
-
-**`vercel.json`** exists only to configure two things — deliberately **not** routing, since the
-zero-config behavior above already handles that correctly on its own and a routing rule is exactly
-what caused problems previously (see
-[Root cause of the reported failure](#root-cause-of-the-reported-failure)):
+**How routing works — `vercel.json`, current, confirmed working:**
 
 ```json
 {
-  "framework": null,
-  "functions": {
-    "api/index.py": { "maxDuration": 60 }
-  }
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": ["backend/**", "*.html", "assets/**"]
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "api/index.py" }
+  ]
 }
 ```
 
-- `"framework": null` pins "no framework" (the "Other" preset) in version control, instead of
-  leaving it as a dashboard toggle that could drift or get changed independent of this repo — this
-  directly forecloses one of the two suspected causes of the earlier `/backend/server.py` routing
-  bug.
-- `"functions"` raises `api/index.py`'s execution time limit to 60 seconds (Vercel's Hobby-tier
-  default is much shorter). Gemini/Groq calls — especially quiz generation, which can retry once
-  on an invalid response (see `backend/ai/ai_agent.py`) — can comfortably take longer than a
-  default timeout allows; 60s gives real headroom without needing a paid plan's longer limits.
+This is the legacy-but-still-supported `builds`/`routes` format: `routes` sends **every** request —
+`/`, `/learning.html`, `/assets/js/common.js`, `/api/quiz/start`, all of it — to the one Python
+Serverless Function built from `api/index.py`. That works correctly here (rather than 404ing on
+the static pages) specifically because `backend/server.py` already has real handlers for all of
+them: `/`, `/index.html`, `/learning.html`, `/quiz.html`, `/dashboard.html`, `/login.html`,
+`/signup.html` each return the matching file via `FileResponse`, and `/assets/*` is served through
+a mounted `StaticFiles` directory — the same routes added earlier so `python backend/server.py`
+alone (no separate static server) is a complete local dev environment. Routing 100% of production
+traffic through that one function just means local dev and production now go through the exact
+same code path, no separate static-hosting behavior to keep in sync.
 
-No `rewrites`, no `routes`, no `builds` — those are exactly the fields that, in an earlier
-iteration of this file, either added unnecessary indirection or (in the legacy `builds`/`routes`
-format some other tutorials use) could point a URL directly at `backend/server.py`.
+`config.includeFiles` matters because of *why* this works: `@vercel/python`'s build only
+auto-bundles files it can trace through Python `import` statements, which covers every module
+under `backend/` (imported, directly or transitively, by `api/index.py`) — but `index.html`,
+`learning.html`, and everything under `assets/` are read from disk at request time (`FileResponse`,
+`StaticFiles`), never `import`ed, so the builder has no way to know they're needed. Without
+`includeFiles` naming them explicitly, the build can succeed with no error and the deployment can
+still 404 the moment someone visits `/`, because the HTML/asset files were simply never bundled
+into the function. `backend/**` is included too for belt-and-suspenders, even though it should
+already be picked up by import tracing.
+
+**Trade-offs worth knowing, from routing everything through one function instead of letting
+Vercel's CDN serve static files directly:** every CSS/JS/image request is now a Python function
+invocation rather than a static asset served at the edge — slower per request (especially on a
+cold start) and counts against your plan's function-invocation limits. This format also can't be
+combined with the newer `functions` block for a per-function `maxDuration` override (`functions`
+and `builds` are mutually exclusive in `vercel.json`), so this function runs on Vercel's default
+execution time limit rather than an extended one — worth watching if quiz generation (which can
+retry once on an invalid AI response, see `backend/ai/ai_agent.py`) ever times out in production.
+If that starts happening, the fix is switching this file to the newer `functions`-block format
+(no `builds`/`routes`), which does support a per-function `maxDuration` override.
 
 **`.vercelignore`** keeps the deployment small and predictable regardless of local state — it
 excludes `.venv/`, `__pycache__/`, `.env`, and other local-only files so a `vercel deploy` run
 straight from the CLI (which uploads the current directory, not a git history) can't accidentally
 ship a multi-hundred-MB virtual environment or a real secret. `requirements.txt` at the repo root
-is what Vercel's Python runtime actually installs from — `pyproject.toml`'s `dependencies` list is
-kept identical for editor/tooling metadata only, and deliberately has no `[build-system]` section,
-since Vercel doesn't build this project as an installable package (it just installs
-`requirements.txt` and imports `api/index.py` directly).
+is what `@vercel/python` actually installs from — `pyproject.toml`'s `dependencies` list is kept
+identical for editor/tooling metadata only, and deliberately has no `[build-system]` section, since
+Vercel doesn't build this project as an installable package, it just installs `requirements.txt`
+and runs the function.
 
 ### Local vs. production API base URL
 
@@ -239,16 +246,21 @@ in production — in both cases, every path already starts with `/api`.
 
 ### Critical routing rule
 
-`/`, `/learning.html`, `/quiz.html`, `/dashboard.html`, `/login.html`, `/signup.html`, and
-`/assets/*` are **always** served as static files by Vercel directly, in production — they never
-reach `backend/server.py`, `api/index.py`, or any Python code there. Only paths starting with
-`/api/` are handled by the FastAPI app on Vercel. (Locally, `backend/server.py` *also* serves
-these same paths itself, as a convenience — see [Local setup](#local-setup) — but that has no
-bearing on production, where Vercel's static layer always wins before a request would reach the
-Python function.) On Vercel specifically, `backend/server.py` is never an independent route or
-process: it is only ever imported as a Python module, by `api/index.py` — there is no
-configuration anywhere in this repository, in Vercel's zero-config detection, or in any build
-command that executes it directly or maps a URL path to it.
+With the current `vercel.json` (see [Deploying to Vercel](#deploying-to-vercel)), **every** path —
+`/`, `/learning.html`, `/quiz.html`, `/dashboard.html`, `/login.html`, `/signup.html`, `/assets/*`,
+and everything under `/api/`  — is routed to the single Python Serverless Function built from
+`api/index.py`. That function `import`s `backend.server:app` and, for the static paths, that same
+app answers with `FileResponse`/`StaticFiles` handlers (added for local dev — see
+[Local setup](#local-setup) — and reused here). There is exactly one FastAPI instance, exactly one
+Serverless Function, and exactly one place path handling is decided (`backend/server.py`'s own
+route definitions) — the same code answers a request identically whether it arrived locally or via
+Vercel's routing.
+
+Either way, `backend/server.py` is never an independent route or its own separate process on
+Vercel: it is only ever imported as a Python module, by `api/index.py`. There is no configuration
+anywhere in this repository — no `builds` entry, no `routes` entry, nothing in the dashboard's
+Build & Development Settings — that executes `backend/server.py` directly or maps a URL straight
+at that file path; every route above only ever reaches it through `api/index.py`'s import.
 
 Every response follows one envelope: `{"success": true, ...}` or
 `{"success": false, "error": {"code", "message"}}` — provider errors, prompts, stack traces and
@@ -327,6 +339,13 @@ Independently of that dashboard check, this repository is now also structurally 
 the failure mode itself: `api/index.py` no longer wraps the app in any custom class (a wrapper is
 one more layer that could theoretically misbehave), and there is exactly one `FastAPI()` instance
 anywhere in the codebase, in `backend/server.py`, imported — never executed — everywhere else.
+
+**Note:** the current `vercel.json` (see [Deploying to Vercel](#deploying-to-vercel)) does use the
+legacy `builds`/`routes` format flagged as a suspect above — the difference is that `dest` here
+points at `api/index.py` (which only ever imports `backend.server`), never at
+`backend/server.py` directly. That distinction is exactly what determines whether this pattern is
+safe or reproduces the original bug — confirmed correct by grep (`dest: "api/index.py"`, not
+`"backend/server.py"`) and by testing `api/index.py`'s app object directly.
 
 ## Known limitations
 

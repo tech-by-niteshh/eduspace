@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 GROQ_API_KEY = os.getenv("GROQ_API1") or os.getenv("GROQ_API2")
 GEMINI_API_KEY = os.getenv("GEMINI_API1")
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
