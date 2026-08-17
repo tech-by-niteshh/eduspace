@@ -1,540 +1,310 @@
-<div align="center">
+# EduSpace
 
-<img src="assets/images/logo.png" alt="EduSpace" width="220">
+EduSpace is an AI-powered personalized learning platform: students describe a topic in plain
+English, and Gemini/Groq generate a five-part learning path, an adaptive five-question quiz with
+worked explanations, and a performance report — instead of static, pre-written lessons.
 
-# ᴇᴅᴜsᴘᴀᴄᴇ
+## Features
 
-### Personalized learning that understands **why** a student got it wrong — not just that they did.
+- **Personalized learning paths** (`learning.html`) — a student names any topic; Groq splits it
+  into five ordered learning parts, and Gemini generates a summary, an explanation, and a short
+  AI tutor note for each part as the student opens it.
+- **AI quiz** (`quiz.html`) — Gemini generates exactly five multiple-choice questions on a topic
+  the student chooses, with a balanced easy → hard difficulty curve. Each answer is scored
+  server-side and explained by Gemini (correct answer, why, and a learning tip). After the fifth
+  question, Groq analyzes the whole attempt — strengths, weaknesses, topics to revisit, and a
+  recommended next step — and a "Learn `<weak topic>`" link opens a real learning path for it.
+- **Dashboard** (`dashboard.html`) — understanding %, a day streak, weak topics, and recent
+  activity, computed entirely from what the student actually did (quiz/learning progress recorded
+  in the browser's `localStorage`) — never fabricated placeholder numbers.
+- **Auth** (`login.html`, `signup.html`) — backed by a Google Sheets Apps Script webhook (see
+  [Authentication model](#authentication-model) below for what this does and doesn't guarantee).
 
-Most learning platforms mark an answer right or wrong and move on. EduSpace is built around the
-question that actually matters: *what does this student misunderstand, and what should they see next?*
+## Architecture
 
-<br>
-
-![Status](https://img.shields.io/badge/status-prototype-1a64be?style=flat-square)
-![Frontend](https://img.shields.io/badge/frontend-HTML%20%C2%B7%20CSS%20%C2%B7%20vanilla%20JS-0e2138?style=flat-square)
-![Backend](https://img.shields.io/badge/backend-FastAPI-2596e5?style=flat-square)
-![Python](https://img.shields.io/badge/python-3.9%2B-04287e?style=flat-square)
-![Build](https://img.shields.io/badge/build%20step-none-3dbff8?style=flat-square)
-
-**Built for the AI-Powered Personalized Learning Ecosystem hackathon — Track 04**
-
-</div>
-
-<br>
-
-<div align="center">
-  <img src="assets/images/screenshots/landing.jpg" alt="EduSpace landing page" width="100%">
-</div>
-
----
-
-## ᴡʜᴀᴛ ɪs ᴇᴅᴜsᴘᴀᴄᴇ?
-
-A web-based learning platform for a single student at a time. A student signs up, works through a
-topic, practises it, and sees an honest picture of what they actually understand — per topic, not as
-one blended score.
-
-The product today is a **working end-to-end learning loop** with a **modular intelligence layer that
-is deliberately unimplemented**. Every AI seam exists, is documented, is wired into both the API and
-the UI, and currently returns "no analysis available" — which the interface renders as a clean empty
-state rather than a fabricated result.
-
-> **On honesty:** nothing in this README is marked as working unless it runs today. The
-> misconception engine, knowledge model, adaptive engine, question generator and tutor are
-> **integration points, not implementations.** They are described that way throughout.
-
----
-
-## ᴛʜᴇ ᴘʀᴏʙʟᴇᴍ
-
-```text
-What does the student know?
-        ↓
-What did the student misunderstand?
-        ↓
-Why did they struggle?
-        ↓
-What should they learn next?
+```
+Browser (static HTML/CSS/JS)
+      |
+      |  fetch()  — EduSpace.api in assets/js/common.js
+      v
+FastAPI app (backend/server.py)
+      |
+      |-- backend/data/          login, signup            -> Google Sheets webhook
+      |-- backend/learning/      learning-path endpoints   -> AI functions below
+      |-- backend/quiz/          quiz endpoints             -> AI functions below
+      v
+backend/ai/ai_agent.py  (validates every AI response; never trusts raw output)
+      |
+      +-- Gemini  — lesson summaries/explanations, quiz question generation, per-answer feedback
+      +-- Groq    — curriculum decomposition, AI tutor notes, final quiz performance analysis
 ```
 
-A generic chatbot answers questions. A static quiz platform counts them. Neither builds a model of
-*this particular student*. EduSpace is structured so that every answered question flows into a
-per-topic knowledge state, and every downstream decision — difficulty, explanation, next topic —
-reads from that state rather than from a global score.
+**Frontend and API share one deployment.** Every router's own prefix already includes `/api`
+(`backend/quiz/quiz_router.py`'s `/api/quiz/...`, `login.py`'s `/api/login`, ...), so the app's
+real routes are identical locally and on Vercel — nothing rewrites or strips a path anywhere.
+Locally, the API runs standalone on `http://127.0.0.1:8000` and those same `/api/...` routes are
+reached at `http://127.0.0.1:8000/api/...`. On Vercel, `api/index.py` is a one-line passthrough
+(`from backend.server import app`) — Vercel's Python runtime forwards every request under `/api`
+straight into that FastAPI app exactly as received, and FastAPI's own router matches it directly
+because the paths already agree. `assets/js/common.js` picks the right base URL automatically
+(see [Local vs. production API base URL](#local-vs-production-api-base-url)).
 
----
+**No database.** Student accounts live in a Google Sheet; everything else the app "remembers" —
+progress, streaks, weak topics — lives in the browser's `localStorage`
+(`assets/js/common.js`'s `EduSpace.progress`). AI-generated content is ephemeral by design:
 
-## ᴛʜᴇ ʜᴀʀᴅ-ᴍᴏᴅᴇ ᴅɪғғᴇʀᴇɴᴛɪᴀᴛᴏʀ
+- Learning-path parts are cached in the FastAPI process's memory only as a *performance*
+  shortcut (same topic + part reuses the last generation instead of calling Gemini/Groq again).
+  A cache miss just costs one extra AI call — nothing breaks if it's empty.
+- Quiz sessions are **not** cached in memory at all. A quiz's `quiz_id` is itself an encrypted,
+  tamper-proof token (`backend/quiz/quiz_session.py`, via `cryptography.fernet`) carrying the
+  topic, the questions with their correct answers, and the answers recorded so far. This is what
+  makes the quiz correct on Vercel: two requests for the same quiz are not guaranteed to land on
+  the same serverless instance, so anything held only in a Python dict in one process would
+  vanish before the next request arrived. The token approach needs no server memory at all — see
+  that file's docstring for the full reasoning. **This is why `QUIZ_SESSION_SECRET` is a required
+  production environment variable** (below): every instance must derive the same encryption key.
 
-Two students give the **same wrong answer** to the same question. A conventional system gives them
-the same correction. That is the failure EduSpace is designed around.
+## Local setup
 
-```mermaid
-flowchart LR
-    Q["3/4 + 1/2 = ?<br/>Both answer 4/6"]
-    Q --> A["Student A<br/>added numerators and<br/>denominators straight across"]
-    Q --> B["Student B<br/>found the common denominator,<br/>then slipped converting 1/2"]
-    A --> AE["Explain: what a<br/>denominator means"]
-    B --> BE["Explain: converting<br/>a fraction, not adding"]
-    AE --> AP["Practice: common<br/>denominators"]
-    BE --> BP["Practice: equivalent<br/>fractions"]
-```
-
-Same question → different reasoning → different misconception → different explanation → different
-next step.
-
-**Status: this is the design direction, not a shipped feature.** The architecture routes every
-answer through a misconception stage (`backend/ai/misconception.py`) and the UI already has the
-surfaces to display its output. The reasoning itself is not built. The landing page presents this
-comparison as the product thesis, and the code is arranged so that implementing one module switches
-it on without touching the frontend.
-
----
-
-## ᴡʜʏ ᴇᴅᴜsᴘᴀᴄᴇ
-
-| | |
-|---|---|
-| **Per-topic knowledge state** | Understanding is tracked per topic, never as one blended percentage. Implemented. |
-| **Misconception-aware architecture** | Every answer passes through a dedicated misconception stage before anything is recommended. Seam implemented, reasoning not. |
-| **One progress store** | Learning, quiz and dashboard read and write the same store. No page keeps its own private copy. |
-| **Honest empty states** | Where the intelligence layer has no answer, the UI says so. No placeholder statistics anywhere. |
-| **Modular learning backend** | Six independent modules behind one orchestration pipeline — each can be built and switched on alone. |
-| **No build step** | Pure HTML, CSS and vanilla JavaScript. Clone and open. Nothing to compile. |
-
----
-
-## ғᴇᴀᴛᴜʀᴇs
-
-### sᴛᴜᴅᴇɴᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ — ɪᴍᴘʟᴇᴍᴇɴᴛᴇᴅ
-
-- Topic-based learning path across a five-topic Fractions unit
-- Lesson content with step-by-step explanation per topic
-- Practice sets with 20 authored questions, answer evaluation and per-question explanations
-- Mark a topic complete, or flag it for review
-- Progress recorded on every answer, lesson open and completed set
-- Dashboard with per-topic understanding, weak topics, activity feed and quiz statistics
-- Session handling, form validation and logout
-
-### ɪɴᴛᴇʟʟɪɢᴇɴᴄᴇ ʟᴀʏᴇʀ — ɪɴᴛᴇɢʀᴀᴛɪᴏɴ ᴘᴏɪɴᴛs, ɴᴏᴛ ɪᴍᴘʟᴇᴍᴇɴᴛᴀᴛɪᴏɴs
-
-| Module | File | Status |
-|---|---|---|
-| Knowledge modelling | `backend/learning/knowledge_model.py` | Interface defined, returns `None` |
-| Misconception detection | `backend/ai/misconception.py` | Interface defined, returns `None` |
-| Adaptive difficulty / path | `backend/learning/adaptive_engine.py` | Interface defined, returns `None` |
-| Question generation | `backend/ai/question_generator.py` | Interface defined, returns `None` |
-| AI tutor explanations | `backend/ai/tutor.py` | Interface defined, returns `None` |
-| Progress prediction | `backend/learning/progress_predictor.py` | Interface defined, returns `None` |
-
-All six are called by a real orchestration pipeline (`backend/learning/pipeline.py`) and exposed over
-HTTP. `GET /insights/status` reports which stages are implemented; the frontend reads that and
-chooses between real analysis and an empty state.
-
-### ᴘʟᴀᴛғᴏʀᴍ — ɪᴍᴘʟᴇᴍᴇɴᴛᴇᴅ
-
-Authentication API · learning interface · quiz interface · dashboard · insights API · browser-local
-progress persistence
-
----
-
-## sᴄʀᴇᴇɴsʜᴏᴛs
-
-<table>
-<tr>
-<td width="50%"><img src="assets/images/screenshots/learning.jpg" alt="Learning page"><br><sub><b>Learning</b> — topic path, lesson steps, and a tutor note that stays empty until a real analysis exists</sub></td>
-<td width="50%"><img src="assets/images/screenshots/quiz.jpg" alt="Quiz page"><br><sub><b>Quiz</b> — answer evaluation with the explanation for the specific question</sub></td>
-</tr>
-<tr>
-<td colspan="2"><img src="assets/images/screenshots/dashboard.jpg" alt="Dashboard"><br><sub><b>Dashboard</b> — per-topic understanding, weak topics, and an activity feed built entirely from recorded answers</sub></td>
-</tr>
-<tr>
-<td colspan="2"><img src="assets/images/screenshots/flip-cards.jpg" alt="Flip cards"><br><sub><b>Flip cards</b> — the four stages of the learning loop, one card turned</sub></td>
-</tr>
-</table>
-
----
-
-## ᴀʀᴄʜɪᴛᴇᴄᴛᴜʀᴇ
-
-```mermaid
-flowchart TD
-    S["Student"] --> FE["EduSpace frontend<br/>static HTML · CSS · vanilla JS"]
-    FE --> PAGES["Learning · Quiz · Dashboard"]
-    PAGES --> STORE["EduSpace.progress<br/>single browser-local store"]
-    STORE --> DASH["Dashboard renders<br/>real recorded data"]
-
-    FE -->|"POST /login · /signup"| AUTH["FastAPI auth routes"]
-    AUTH --> SHEET["Google Sheets webhook"]
-
-    PAGES -->|"POST /insights/answer"| PIPE["Learning pipeline"]
-    PIPE --> KM["Knowledge model"]
-    KM --> MC["Misconception analysis"]
-    MC --> AE["Adaptive engine"]
-    AE --> QG["Question generator"]
-    AE --> TU["AI tutor"]
-    AE --> PP["Progress predictor"]
-    QG --> RESP["available: false<br/>until modules are built"]
-    TU --> RESP
-    PP --> RESP
-    RESP --> FE
-
-    style RESP stroke-dasharray: 5 5
-    style KM stroke-dasharray: 5 5
-    style MC stroke-dasharray: 5 5
-    style AE stroke-dasharray: 5 5
-    style QG stroke-dasharray: 5 5
-    style TU stroke-dasharray: 5 5
-    style PP stroke-dasharray: 5 5
-```
-
-Dashed nodes are integration points that currently return no data.
-
----
-
-## ᴛᴇᴄʜ sᴛᴀᴄᴋ
-
-### ғʀᴏɴᴛᴇɴᴅ
-Static **HTML5**, **CSS3** (custom properties, grid, flexbox) and **vanilla JavaScript** (ES2020,
-IIFE modules on a single `window.EduSpace` namespace). No framework, no bundler, no build step.
-Typography is **Fraunces** + **Inter** via Google Fonts.
-
-### ʙᴀᴄᴋᴇɴᴅ
-**Python** with **FastAPI**, served by **Uvicorn**. **Pydantic** for request schemas,
-**python-dotenv** for configuration, **requests** for the outbound webhook call,
-**email-validator** for address validation.
-
-### AI / ʟᴇᴀʀɴɪɴɢ ʟᴀʏᴇʀ
-Six plain Python modules under `backend/ai/` and `backend/learning/`, orchestrated by
-`pipeline.py` and exposed through `insights_router.py`. **No model provider, no ML library and no
-inference code is present** — these are typed, documented interfaces.
-
-### ᴅᴀᴛᴀ / sᴛᴏʀᴀɢᴇ
-No database. Authentication is forwarded to a **Google Apps Script webhook** backed by a Google
-Sheet. Learning progress is stored in the browser's **localStorage** under a single documented
-schema (`eduspace_progress`), which makes it per-device and per-browser.
-
-### ᴛᴏᴏʟɪɴɢ
-Python's built-in `http.server` is enough to serve the frontend. No package manager, task runner or
-compiler is required on the frontend side.
-
----
-
-## ᴘʀᴏᴊᴇᴄᴛ sᴛʀᴜᴄᴛᴜʀᴇ
-
-```text
-eduspace/
-├── index.html                  Landing — problem statement, four-stage loop, about, support
-├── login.html  signup.html     Authentication
-├── learning.html               Topic path and lesson content
-├── quiz.html                   Practice sets
-├── dashboard.html              Student progress and insights
-│
-├── assets/
-│   ├── css/
-│   │   ├── base.css            Design tokens, reset, nav, footer, buttons, motion system
-│   │   ├── index.css           Landing page, flip cards
-│   │   ├── auth.css            Layout shared by login and signup
-│   │   ├── login.css  signup.css
-│   │   ├── learning.css  quiz.css  dashboard.css
-│   ├── js/
-│   │   ├── common.js           Namespace, API helper, session, progress store, insights seam,
-│   │   │                       nav and the scroll-reveal observer. Loaded first on every page.
-│   │   ├── curriculum.js       Authored lesson and question content, shared topic IDs
-│   │   ├── index.js            Flip-card interaction
-│   │   ├── login.js  signup.js Auth forms and validation
-│   │   ├── learning.js         Topic selection, lesson rendering, progress recording
-│   │   ├── quiz.js             Question flow, evaluation, feedback, scoring, recording
-│   │   └── dashboard.js        Renders real data, or an empty state
-│   └── images/                 Logo, derived nav mark, favicons, screenshots
-│
-├── backend/
-│   ├── server.py               FastAPI app, CORS, router registration
-│   ├── data/
-│   │   ├── login.py            POST /login   → Sheets webhook
-│   │   ├── signup.py           POST /signup  → Sheets webhook
-│   │   └── upload_data.py      Empty placeholder, unused
-│   ├── learning/
-│   │   ├── pipeline.py         Orchestrates the six modules in order
-│   │   ├── insights_router.py  /insights/* routes
-│   │   ├── knowledge_model.py  ─┐
-│   │   ├── adaptive_engine.py   ├─ integration points, all return None
-│   │   └── progress_predictor.py┘
-│   └── ai/
-│       ├── misconception.py    ─┐
-│       ├── question_generator.py├─ integration points, all return None
-│       ├── tutor.py            ─┘
-│       └── ai_agent.py         Earlier stub set, currently unused
-│
-└── requirements.txt
-```
-
----
-
-## ʜᴏᴡ ᴛʜᴇ sʏsᴛᴇᴍ ᴡᴏʀᴋs
-
-1. Student signs up — `POST /signup` forwards to the Sheets webhook
-2. Student logs in — `POST /login`; the session is normalised and stored client-side
-3. Student opens a topic on the learning page — the open is recorded
-4. Student starts a practice set for that topic — the topic ID travels in the URL
-5. Each answer is evaluated, explained, and written to `EduSpace.progress`
-6. The same answer is posted to `/insights/answer`, which runs the pipeline
-7. The pipeline returns `available: false` today, so no analysis is displayed
-8. Finishing a set records the session and marks the topic covered
-9. The dashboard reads the store and renders understanding, weak topics and activity
-
-Weak topics are currently identified by a **plain threshold** — below 60% correct across at least
-three answers — and the code says so explicitly. That is arithmetic, not misconception detection.
-When `misconception.py` is implemented, its output takes priority automatically.
-
----
-
-## ᴅᴀsʜʙᴏᴀʀᴅ
-
-Everything shown is computed from answers the student actually gave.
-
-| Panel | Source |
-|---|---|
-| Overall understanding | correct ÷ answered, across practised topics only |
-| Weak topics | plain threshold (<60% over ≥3 answers), labelled as such |
-| Day streak | consecutive days with recorded activity |
-| Questions answered | total, plus a 7-day count |
-| Understanding by topic | per-topic percentage, lowest first |
-| Recent activity | lesson opens, answers, completed sets, completions |
-| Topics attempted / completed | counted against the curriculum |
-
-With no data, every panel shows a written empty state. There are no seeded numbers anywhere.
-
----
-
-## ɢᴇᴛᴛɪɴɢ sᴛᴀʀᴛᴇᴅ
-
-### 1. ᴄʟᴏɴᴇ
-
-```bash
-git clone <your-repository-url>
-cd eduspace
-```
-
-> This project folder does not currently contain a git remote — substitute your own repository URL.
-
-### 2. ʙᴀᴄᴋᴇɴᴅ
-
-From the project root:
-
-```bash
-python -m venv venv
-```
-
-```powershell
-venv\Scripts\activate          # Windows PowerShell
-```
-
-```bash
-source venv/bin/activate       # macOS / Linux
-```
+Requires **Python 3.12+**.
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env   # then fill in the values below
+python backend/server.py
 ```
 
-Then start the API **from the `backend` directory**:
+Open `http://127.0.0.1:8000/` — that's the whole app. This one process serves **both** the
+frontend (`index.html`, `learning.html`, ..., `assets/*`, mirroring exactly what Vercel serves
+statically in production — see `backend/server.py`'s static routes) **and** the API under
+`/api/...` (interactive docs at `/docs`). No second terminal, no separate static file server, no
+CORS setup needed for local development — everything is same-origin. `assets/js/common.js` still
+detects it isn't on Vercel and points API calls at `http://127.0.0.1:8000/api`, which is this
+same server.
+
+Equivalent alternatives, if you prefer:
+- `python -m backend.server` — identical result, run as a module instead of a script.
+- `uvicorn backend.server:app --reload` — adds auto-reload on file changes (not available when
+  running the file directly, since `python backend/server.py` passes the already-constructed
+  `app` object to uvicorn rather than an import string, which is what makes plain `python
+  backend/server.py` reliable in the first place — reload needs to re-import the module by name
+  in a fresh subprocess, which the plain script form deliberately avoids depending on).
+- Serve the HTML files with a separate static server (e.g. VS Code's "Live Server") while running
+  the backend on its own — still works, the CORS config in `backend/server.py` allows it.
+
+> Running `backend/server.py` directly (rather than importing it) puts `backend/`'s own directory
+> on `sys.path`, not the repository root — so the `from backend.data.login import ...` absolute
+> imports a few lines down would normally fail with `ModuleNotFoundError: No module named
+> 'backend'`. A small guard at the top of that file, scoped to exactly `if __name__ ==
+> "__main__":`, fixes `sys.path` *only* when the file is run as the entry-point script — it never
+> fires when the module is imported normally (`from backend.server import app`, e.g. by
+> `api/index.py` on Vercel), so that import path stays exactly as clean and hack-free as before.
+> Vercel never executes this file directly either way — it only ever imports `backend.server:app`
+> through `api/index.py` (see [Deploying to Vercel](#deploying-to-vercel)).
+
+### Quick health check
 
 ```bash
-cd backend
-python server.py
+python -c "from backend.server import app; print(app)"   # must import cleanly, no server needed
+python -c "from api.index import app; print(app)"        # the actual Vercel entrypoint — same app
+curl http://127.0.0.1:8000/api                            # {"status": "online", ...}
 ```
 
-That runs Uvicorn on `http://127.0.0.1:8000` with reload enabled. The equivalent explicit command is:
+## Environment variables
 
-```bash
-uvicorn server:app --reload --host 127.0.0.1 --port 8000
-```
+Copy `.env.example` to `.env` and fill in real values locally; set the same names in your Vercel
+project's Environment Variables for production. The app **imports and starts successfully with
+none of these set** — routes that need a missing key return a clean `503`/error JSON instead of
+crashing the whole server.
 
-Interactive API docs are then at `http://127.0.0.1:8000/docs`.
-
-### 3. ғʀᴏɴᴛᴇɴᴅ
-
-The frontend is static — there is no Node server and nothing to build. Serve the project root:
-
-```bash
-python -m http.server 5500
-```
-
-Open `http://127.0.0.1:5500/index.html`.
-
-> Serving over HTTP is recommended. Opening the files directly with `file://` works for browsing,
-> but browsers block `fetch` to the API from that origin, so login and signup will not complete.
-
-The frontend expects the API at `http://127.0.0.1:8000`, set once in
-`assets/js/common.js` as `EduSpace.API_BASE_URL`.
-
-**The learning, quiz and dashboard pages work without the backend running.** Only signup and login
-require it.
-
----
-
-## ᴄᴏɴғɪɢᴜʀᴀᴛɪᴏɴ
-
-One environment variable, read by the backend:
-
-```ini
-# backend/.env
-SHEETS_SCRIPT_API=<your Google Apps Script web-app URL>
-```
-
-If it is missing, `/login` and `/signup` return a clean `503` and log the reason server-side rather
-than crashing.
-
-> **Never commit secrets or API keys.** This project has no `.gitignore` yet and a `.env` file is
-> present in the working tree — add `.env` to a `.gitignore` before publishing the repository, and
-> rotate the webhook URL if it has already been pushed.
-
-Passwords are currently forwarded to the Sheets webhook in cleartext and stored unhashed. That is a
-known limitation of the prototype storage layer, listed in the roadmap below.
-
----
-
-## API ʀᴇғᴇʀᴇɴᴄᴇ
-
-| Method | Endpoint | Purpose | Status |
+| Variable | Required | Used by | Notes |
 |---|---|---|---|
-| `GET` | `/` | Health check | Implemented |
-| `POST` | `/signup` | Create an account via the Sheets webhook | Implemented |
-| `POST` | `/login` | Authenticate via the Sheets webhook | Implemented |
-| `GET` | `/insights/status` | Which pipeline stages are implemented | Implemented — reports all false |
-| `POST` | `/insights/answer` | Run one answered question through the pipeline | Implemented — returns `available: false` |
-| `GET` | `/insights/knowledge` | Per-topic mastery for a student | Awaiting `knowledge_model.py` |
-| `GET` | `/insights/misconceptions` | Active misconceptions | Awaiting `misconception.py` |
-| `GET` | `/insights/tutor-note` | Tutor note for a student and topic | Awaiting `tutor.py` |
-| `GET` | `/insights/questions` | Generated practice questions | Awaiting `question_generator.py` |
+| `SHEETS_SCRIPT_API` | for login/signup | `backend/data/login.py`, `signup.py` | Google Apps Script Web App URL. |
+| `GROQ_API1`, `GROQ_API2` | for learning + quiz results | `backend/ai/providers.py` | First non-empty one is used; two keys let you swap a rate-limited one without a deploy. |
+| `GEMINI_API1` | for learning + quiz | `backend/ai/providers.py` | |
+| `GROQ_MODEL` | optional | `backend/ai/providers.py` | Defaults to `llama-3.3-70b-versatile`. |
+| `GEMINI_MODEL` | optional | `backend/ai/providers.py` | Defaults to `gemini-3.1-flash-lite`. |
+| `QUIZ_SESSION_SECRET` | **required in production** | `backend/quiz/quiz_session.py` | Encrypts quiz tokens. Optional locally (falls back to a random per-process key, fine for one long-lived dev server) but **must** be a real, stable value in production — see the architecture note above. Generate one with `python -c "import secrets; print(secrets.token_urlsafe(32))"`. |
+| `CORS_ORIGINS` | optional | `backend/server.py` | Comma-separated extra allowed origins for local dev (e.g. a non-default Live Server port). Not needed on Vercel — the frontend and API share one origin there. |
 
-CORS is open (`allow_origins=["*"]`) for local development.
+## Deploying to Vercel
 
----
-
-## ᴅᴇsɪɢɴ ᴀɴᴅ ᴍᴏᴛɪᴏɴ
-
-EduSpace should read as an education product, not a science-fiction interface. The palette is
-sampled directly from the logo — deep navy `#04287E`, cobalt `#1A64BE`, azure `#2596E5`, bright sky
-`#3DBFF8`, over cool near-white neutrals. `base.css` is the only file that defines colour.
-
-Text contrast is verified against WCAG AA: cobalt on surface 4.99:1, white on cobalt 5.82:1,
-body text on background 15.24:1.
-
-### ᴍᴏᴛɪᴏɴ & ɪɴᴛᴇʀᴀᴄᴛɪᴏɴ
-
-One system, four movements, driven by a single IntersectionObserver:
-
-| Movement | Used for | Duration |
-|---|---|---|
-| **Flip** | Feature and information cards turning over | 760 ms |
-| **Slide** | Sections and content blocks entering the viewport | 620 ms |
-| **Rise** | Cards, buttons and panels lifting on hover | 320 ms |
-| **Reveal** | Text and supporting content fading in | 620 ms |
-
-**Subtle 3D depth** comes from perspective on card containers, two-layer shadows and small
-transforms — a card sits slightly off the page and lifts 3 px on hover. Not from glow.
-
-**Low velocity is deliberate.** Nothing moves faster than 320 ms and travel stays between 2 px and
-22 px (14 px on mobile). Hover lifts are gated behind `@media (hover: hover)` so a tap never leaves
-a card stuck, and `prefers-reduced-motion` disables the lot.
-
-**No AI-themed effects.** No neural-network backgrounds, particles, holograms, circuit graphics,
-scanning sweeps or perpetual gradients — verified as zero looping animations on every page. The
-intelligence is meant to show in what the product does, not in decoration.
-
----
-
-## 60-sᴇᴄᴏɴᴅ ᴊᴜᴅɢᴇ ᴅᴇᴍᴏ
-
-```text
-1.  Open index.html            — read the thesis: same wrong answer, different reasons
-2.  Click a flip card          — the four stages: understand, diagnose, adapt, explain
-3.  Go to Learning             — pick a topic, read the steps
-4.  Note the tutor note        — deliberately empty; no invented diagnosis
-5.  Practice this topic        — answer one correctly, one incorrectly
-6.  Read the feedback          — the explanation is specific to that question
-7.  Finish the set             — see the score summary
-8.  Open Dashboard             — the numbers are exactly what you just did
-9.  GET /insights/status       — every stage reports implemented: false, by design
+```bash
+npm install -g vercel   # or use `npx vercel`
+vercel login
+vercel                  # first deploy — links the project, deploys a Preview
 ```
 
-Steps 3–8 need no backend. Step 9 needs the API running.
+Then, in the Vercel dashboard for the project (Settings → Environment Variables), set at least
+`GEMINI_API1`, `GROQ_API1`, `QUIZ_SESSION_SECRET`, and `SHEETS_SCRIPT_API` (Production + Preview),
+and redeploy (`vercel --prod`) so the function picks them up.
 
----
+**How routing works — no `vercel.json` needed, and none exists in this repo.** Vercel's
+zero-config detection does two things automatically:
 
-## ʜᴀᴄᴋᴀᴛʜᴏɴ ᴀʟɪɢɴᴍᴇɴᴛ — ᴛʀᴀᴄᴋ 04
+- Every file at the repo root and under `assets/` (`index.html`, `learning.html`, ...,
+  `assets/css/*`, `assets/js/*`) is served as a static file, exactly as requested — `/` serves
+  `index.html`, `/learning.html` serves `learning.html`, `/assets/js/common.js` serves that file,
+  with no configuration.
+- `api/index.py` exports a module-level ASGI `app` (a plain `from backend.server import app`,
+  re-exporting the one and only `FastAPI()` instance created in `backend/server.py`), so Vercel
+  turns it into a Serverless Function and forwards every request under `/api/*` to it verbatim —
+  full path included, no stripping, no rewriting. Because every router in `backend/` already
+  declares its real path with `/api` baked into its own prefix (e.g.
+  `APIRouter(prefix="/api/quiz")` in `backend/quiz/quiz_router.py`), FastAPI's router matches the
+  incoming path directly. There is exactly one FastAPI instance in the whole repository, and
+  exactly one place (each router's own `prefix=`) that decides its real path — nothing computes
+  or rewrites `/api/...` anywhere else, so an `/api/api/...` bug is structurally not possible.
 
-| Requirement | Status | How EduSpace addresses it |
+A `vercel.json` **used to exist** in this repo with a rewrite (`/api/(.*)` → `/api/index`) plus an
+ASGI wrapper in `api/index.py` that stripped the `/api` prefix back off before handing the request
+to `backend/server.py`'s (then-unprefixed) routes. That layer of indirection is gone: routes now
+carry their real `/api/...` path natively, matching Vercel's current documented behavior for
+ASGI apps under `api/`, and removing one more place a routing bug could hide.
+
+**`.vercelignore`** keeps the deployment small and predictable regardless of local state — it
+excludes `.venv/`, `__pycache__/`, `.env`, and other local-only files so a `vercel deploy` run
+straight from the CLI (which uploads the current directory, not a git history) can't accidentally
+ship a multi-hundred-MB virtual environment or a real secret. `requirements.txt` at the repo root
+is what Vercel's Python runtime actually installs from — `pyproject.toml`'s `dependencies` list is
+kept identical for editor/tooling metadata only, and deliberately has no `[build-system]` section,
+since Vercel doesn't build this project as an installable package (it just installs
+`requirements.txt` and imports `api/index.py` directly).
+
+### Local vs. production API base URL
+
+`assets/js/common.js` sets `EduSpace.API_BASE_URL` once, based on `window.location.hostname`:
+
+- `localhost` / `127.0.0.1` / opened as a local file → `http://127.0.0.1:8000/api`
+- anything else (a Vercel domain) → `/api`
+
+Every call site in the codebase (`login.js`, `signup.js`, `ai-learning.js`, `ai-quiz.js`,
+`common.js`'s `EduSpace.insights`) calls a bare path like `/quiz/start` — never `/api/...` itself
+— so this one line is the only place in the whole frontend that adds the `/api` prefix, exactly
+once, in both environments.
+
+## API routes
+
+All routes below are relative to `http://127.0.0.1:8000` locally, or the deployed Vercel domain
+in production — in both cases, every path already starts with `/api`.
+
+| Method | Path | Purpose |
 |---|---|---|
-| Student knowledge modelling | **Prototype foundation** | Per-topic state (answered, correct, opened, completed, flagged) is recorded and rendered today. `knowledge_model.py` is the seam for a real mastery estimate. |
-| Adaptive difficulty | **Planned** | `adaptive_engine.py` defines `recommend_difficulty()` and `next_step()`; the quiz already asks the pipeline before falling back to the authored set. |
-| Personalized learning paths | **Partially implemented** | Topic order, completion and review flags are per student and drive what the learning page opens next. Adaptive re-ordering is not built. |
-| Automatic question generation | **Planned** | `question_generator.generate_for_topic()` is called by the quiz on load; returning `None` makes it use the 20 authored questions. |
-| Weak-topic detection | **Implemented (non-AI)** | Plain threshold: <60% correct over ≥3 answers, surfaced on the dashboard and labelled honestly as a threshold. |
-| Learning-progress prediction | **Planned** | `progress_predictor.predict()` interface defined and wired into the pipeline. |
-| Teacher analytics | **Not started** | Out of scope for this build. No teacher role exists. |
-| **Hard mode —** different explanations and paths for different misconceptions behind the *same* wrong answer | **Design direction, architecture in place** | The pipeline routes every incorrect answer through `misconception.detect()` before `adaptive_engine` and `tutor`, and the UI has the surfaces to display both. The inference itself is not implemented, and nothing fabricates it. |
+| `GET` | `/api` | API health check (`/` is the static homepage — see [Critical routing rule](#critical-routing-rule)). |
+| `POST` | `/api/signup`, `/api/login` | Auth, via the Google Sheets webhook. |
+| `POST` | `/api/learning/start` | Groq splits a topic into 5 ordered parts. |
+| `POST` | `/api/learning/part` | Gemini summary + explanation, Groq tutor note, for one part. |
+| `POST` | `/api/quiz/start` | Gemini generates exactly 5 questions; returns them **without** correct answers. |
+| `POST` | `/api/quiz/question` | Scores one answer server-side, returns Gemini's explanation and a rotated `quiz_id` token. |
+| `POST` | `/api/quiz/result` | Groq analyzes the completed attempt; backend stays authoritative on score/percentage. |
+| `GET` | `/api/insights/*` | Integration points for a not-yet-implemented adaptive-misconception pipeline; return `available: false` today by design (see `backend/learning/pipeline.py`). |
 
----
+### Critical routing rule
 
-## ʀᴏᴀᴅᴍᴀᴘ
+`/`, `/learning.html`, `/quiz.html`, `/dashboard.html`, `/login.html`, `/signup.html`, and
+`/assets/*` are **always** served as static files by Vercel directly, in production — they never
+reach `backend/server.py`, `api/index.py`, or any Python code there. Only paths starting with
+`/api/` are handled by the FastAPI app on Vercel. (Locally, `backend/server.py` *also* serves
+these same paths itself, as a convenience — see [Local setup](#local-setup) — but that has no
+bearing on production, where Vercel's static layer always wins before a request would reach the
+Python function.) On Vercel specifically, `backend/server.py` is never an independent route or
+process: it is only ever imported as a Python module, by `api/index.py` — there is no
+configuration anywhere in this repository, in Vercel's zero-config detection, or in any build
+command that executes it directly or maps a URL path to it.
 
-All items below are **future work**, not shipped features.
+Every response follows one envelope: `{"success": true, ...}` or
+`{"success": false, "error": {"code", "message"}}` — provider errors, prompts, stack traces and
+API keys never reach the client (logged server-side only).
 
-- Misconception inference — the core piece; classify *why* an answer is wrong, not just that it is
-- Knowledge modelling with confidence, not just a percentage correct
-- Adaptive difficulty and question selection driven by that model
-- Generated practice questions targeting a detected misconception
-- Tutor explanations written against the specific error a student made
-- Learning-progress prediction
-- Server-side persistent student profiles, replacing browser-local progress
-- Password hashing and a real user store, replacing the Sheets webhook
-- Teacher analytics
-- Coverage beyond the single Fractions unit
-- Evaluation harness to measure whether the reasoning layer is actually right
+## Testing performed
 
----
+- `python -c "from backend.server import app"` and `python -c "from api.index import app"` —
+  both import cleanly with no cwd/sys.path assumptions; `api.index.app` is confirmed to be the
+  exact same `FastAPI` instance (`type(app) is fastapi.applications.FastAPI`, not a wrapper).
+- `api/index.py` verified directly against the raw ASGI protocol (not just `TestClient`, which
+  talks to the FastAPI app directly and would not have caught a `/api` mismatch): `/api`,
+  `/api/quiz/start`, and an unmatched `/api/nonexistent` all resolve correctly, including full
+  request bodies round-tripping — this is what actually proves Vercel's real request shape
+  (`/api/quiz/start` arriving unmodified) reaches the right route with zero rewriting.
+- Confirmed `/api/api/quiz/start` 404s and the old unprefixed `/quiz/start`/`/login` no longer
+  exist at all (they 404) — the double-prefix and stale-route failure modes are both closed.
+- Full quiz flow (`/api/quiz/start` → 5× `/api/quiz/question` → `/api/quiz/result`) via FastAPI's
+  TestClient, both with mocked AI responses (validating routing/scoring/duplicate-
+  submission/incomplete-quiz logic in isolation) and with real Gemini/Groq calls.
+- `python backend/server.py` actually started as a real subprocess (not just imported) and
+  exercised over real HTTP: `GET /` returns `index.html`'s real content (not JSON), all 6 frontend
+  pages and `/assets/js/common.js`/`/assets/css/base.css` serve with correct content-types,
+  `GET /api` still returns the JSON health check, and `POST /api/quiz/start` still reaches the
+  quiz router — confirming the static-frontend addition didn't shadow or break any API route.
+- `/api/signup`, `/api/learning/start`, `/api/insights/status` all confirmed reachable under the
+  new prefix with correct validation behavior.
+- Quiz statelessness proven across **genuinely separate Python processes** (simulating
+  independent serverless cold starts): a token encrypted in one process decrypts correctly in
+  another when `QUIZ_SESSION_SECRET` matches, and safely fails closed when it doesn't.
+- Verified the quiz token's ciphertext does not contain readable question text or answers
+  (confirms answers aren't recoverable by a browser user decoding the token without the key).
+- Failure-mode tests: Gemini down, malformed/short AI output, Groq down — all resolve to the
+  generic `"Something went wrong..."` message with no key/prompt/traceback leakage.
+- Static asset audit: every `href`/`src` in every HTML file resolves to a real file, with
+  case-sensitive path matching (Windows is case-insensitive; Vercel's Linux filesystem is not).
+- Security sweep: no hardcoded API keys/secrets in tracked files, no `eval`/`exec`/`subprocess`,
+  no SQL (no database exists), all AI-generated text rendered via safe DOM construction
+  (never `innerHTML` with AI or user-controlled content).
 
-## ᴛᴇᴀᴍ
+**Not completed:** `vercel build` / `vercel dev` require an authenticated Vercel account
+(interactive OAuth device-flow login) that isn't available in this environment — the CLI installs
+fine (`npx vercel@latest`), but both commands stop at the login prompt. Everything they would
+exercise (the zero-config static/function split, the ASGI entrypoint's exact request handling,
+the requirements/pyproject validity) was instead verified directly against the raw ASGI protocol,
+as described above. Run `vercel login` once and then `vercel build` yourself to close this last
+gap before a real deploy — and see [Root cause of the reported failure](#root-cause-of-the-reported-failure)
+for one thing to check in the dashboard that this repository cannot inspect from here.
 
-The project presents five roles on its About section — Founder / Lead (product and strategy),
-AI & ML (diagnosis engine), Frontend (product experience), Backend (platform and data), and
-Education / Research (curriculum and pedagogy). Individual names are not published in the project,
-so none are listed here.
+## Root cause of the reported failure
 
-Contact goes through the channels below.
+A previous deployment showed `GET /` → `500 FUNCTION_INVOCATION_FAILED` at `Route: /backend/server.py`,
+and running `python backend/server.py` (at that time) produced `ModuleNotFoundError: No module
+named 'backend'`. The second error is the more informative one: it happened because
+`backend/server.py`, when executed directly, puts its own directory on `sys.path` rather than the
+repository root, so its absolute `backend.x` imports couldn't resolve — the same failure shape
+Vercel's function invocation hit. *This particular symptom is now fixed* — `backend/server.py` has
+a small `sys.path` guard scoped to exactly `if __name__ == "__main__":` (see
+[Local setup](#local-setup)), so running it directly works again without reintroducing the
+sys.path fragility the earlier absolute-import refactor deliberately removed from the *module
+import* path. That fix only explains and closes the `ModuleNotFoundError` symptom, though — it
+doesn't explain why Vercel would have invoked `backend/server.py` as its own function in the first
+place, since nothing in this repository does that (there is no `builds`/`routes`
+config anywhere targeting `backend/server.py`, confirmed by grep), and under Vercel's current,
+documented behavior only files under `api/` become Serverless Functions — `backend/server.py`
+living outside `api/` should never be picked up at all. The most likely explanation is a stale
+Vercel **Project Settings** value (Dashboard → Settings → Build & Development Settings) — e.g. a
+leftover custom Build/Start Command, or a `vercel.json` from an earlier iteration of this project
+that used the legacy `builds`/`routes` format pointing at `backend/server.py` directly — which
+this repository's files cannot show, since Vercel can persist dashboard-level settings across
+deploys independently of what's in the repo. **Please check that page and set "Framework Preset"
+to "Other" with no custom Build/Install/Output/Start command overriding the zero-config behavior
+described above**, then redeploy from this repository's current state.
 
----
+Independently of that dashboard check, this repository is now also structurally more resistant to
+the failure mode itself: `api/index.py` no longer wraps the app in any custom class (a wrapper is
+one more layer that could theoretically misbehave), and there is exactly one `FastAPI()` instance
+anywhere in the codebase, in `backend/server.py`, imported — never executed — everywhere else.
 
-## ʟɪᴄᴇɴsᴇ
+## Known limitations
 
-No licence file is present in this repository. All rights are reserved by default until one is
-added. If you intend to open-source it, add a `LICENSE` file and state the licence here.
-
----
-
-<div align="center">
-
-<img src="assets/images/logo-mark.png" alt="" width="56">
-
-### ᴇᴅᴜsᴘᴀᴄᴇ
-
-> Personalized learning that understands the student, not just the answer.
-
-Built for the **AI-Powered Personalized Learning Ecosystem** hackathon — Track 04
-
-<br>
-
-[![Instagram](https://img.shields.io/badge/Instagram-tech__by__niteshh-1a64be?style=flat-square)](https://instagram.com/tech_by_niteshh)
-[![X](https://img.shields.io/badge/X-tech__by__niteshh-0e2138?style=flat-square)](https://x.com/tech_by_niteshh)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Nitesh%20Chaurasiya-2596e5?style=flat-square)](https://www.linkedin.com/in/nitesh-chaurasiya-a7b2aa3a5/)
-[![Telegram](https://img.shields.io/badge/Telegram-tech__by__niteshh-3dbff8?style=flat-square)](https://t.me/tech_by_niteshh)
-
-**Support** · [+1 (405) 2559594](tel:+14052559594) · [niteshh0x0@gmail.com](mailto:niteshh0x0@gmail.com) · [Telegram](https://t.me/tech_by_niteshh)
-
-<sub>© 2026 EduSpace. All rights reserved.</sub>
-
-</div>
+- **Auth is demo-tier.** Passwords are sent to `/login`/`/signup` and forwarded as-is to the
+  Google Apps Script webhook; this repository has no visibility into (and cannot verify or
+  change) how that script stores them. Treat this as a prototype auth flow, not a
+  production-grade credential store — do not reuse real passwords when testing it.
+  Do not put a database or a second auth system in front of it without discussing the tradeoff
+  first; the whole app is built around not needing one.
+- **The adaptive misconception/knowledge-model pipeline is intentionally unimplemented**
+  (`backend/ai/misconception.py`, `tutor.py`, `question_generator.py`,
+  `backend/learning/knowledge_model.py`, `adaptive_engine.py`, `progress_predictor.py`). Every
+  function returns `None`/`pass`; `/insights/*` reports `available: false` and the frontend shows
+  an honest empty state rather than fabricated numbers. This is a separate, larger feature from
+  the quiz/learning systems above, not a bug.
+- **Free-tier AI quota.** Gemini's free tier caps at ~20 requests/day per key; Groq's free tier
+  is more generous. Under heavy testing you may see `AI_PROVIDER_ERROR` from quiz/learning
+  routes purely from quota exhaustion — this fails closed with a clean message, by design.
