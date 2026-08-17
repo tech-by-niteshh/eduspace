@@ -1,5 +1,3 @@
-# api/index.py
-
 import sys
 from pathlib import Path
 
